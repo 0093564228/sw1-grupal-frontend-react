@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { HomePage } from "../components/HomePage";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { ResultsPage } from "../components/ResultsPage";
@@ -9,6 +10,17 @@ const UploadPage = () => {
   const [loading, setLoading] = useState(false);
   // Estado eliminado: no usado en UI
   const [originalVideoUrl, setOriginalVideoUrl] = useState<string | null>(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { albumId } = location.state || {};
+
+  useEffect(() => {
+    if (!albumId) {
+      alert("No se ha seleccionado un álbum. Redirigiendo...");
+      navigate("/");
+    }
+  }, [albumId, navigate]);
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
@@ -31,6 +43,9 @@ const UploadPage = () => {
 
       const formData = new FormData();
       formData.append("file", selectedFile);
+      if (albumId) {
+        formData.append("album_id", String(albumId));
+      }
 
       const response = await fetch(`${API_BASE_URL}/procesar-video/`, {
         method: "POST",

@@ -316,8 +316,8 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      <div className="flex h-screen">
+    <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      <div className="flex">
         {/* Sección izquierda - Pistas de audio */}
         <div className="flex-1 p-6">
           {/* Header con botón de regreso y cerrar sesión */}
