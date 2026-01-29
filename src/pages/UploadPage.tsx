@@ -15,22 +15,24 @@ const UploadPage = () => {
     // Limpiar job_id anterior
     sessionStorage.removeItem("currentJobId");
     // Guardar nombre original (sin extensión) para usarlo en la descarga del instrumental
-    const originalName = selectedFile.name.split('.').slice(0, -1).join('.');
-    sessionStorage.setItem('originalFileName', originalName);
+    const originalName = selectedFile.name.split(".").slice(0, -1).join(".");
+    sessionStorage.setItem("originalFileName", originalName);
 
     // Crear URL para vista previa del video original
     const videoUrl = URL.createObjectURL(selectedFile);
     setOriginalVideoUrl(videoUrl);
   };
 
-  const handleAutoProcess = async (selectedFile: File) => {
+  const handleAutoProcess = async (selectedFile: File, language: string) => {
     setLoading(true);
 
     try {
       console.log("Procesando video automáticamente:", selectedFile.name);
+      console.log("Idioma seleccionado:", language);
 
       const formData = new FormData();
       formData.append("file", selectedFile);
+      formData.append("language", language);
 
       const response = await fetch(`${API_BASE_URL}/procesar-video/`, {
         method: "POST",
@@ -53,14 +55,16 @@ const UploadPage = () => {
       if (!headerJobId) {
         // Si no se pudo leer el header, informar al usuario
         alert("No se recibió job_id. Comprueba CORS/expose_headers.");
-        console.error("Header X-Job-ID ausente: si usas CORS el backend debe exponerlo con expose_headers=[\"X-Job-ID\"]");
+        console.error(
+          'Header X-Job-ID ausente: si usas CORS el backend debe exponerlo con expose_headers=["X-Job-ID"]',
+        );
       } else {
         // Guardar jobId en sessionStorage
         sessionStorage.setItem("currentJobId", headerJobId);
       }
 
       // Obtener el nombre original sin extensión y agregar "_karaoke" para la descarga del video karaoke
-      const originalName = selectedFile.name.split('.').slice(0, -1).join('.');
+      const originalName = selectedFile.name.split(".").slice(0, -1).join(".");
       const downloadName = `${originalName}_karaoke.mp4`;
 
       const a = document.createElement("a");
@@ -72,7 +76,10 @@ const UploadPage = () => {
 
       console.log("Video procesado y descargado automáticamente");
     } catch (error: unknown) {
-      console.error("Error al procesar el video:", error instanceof Error ? error.message : String(error));
+      console.error(
+        "Error al procesar el video:",
+        error instanceof Error ? error.message : String(error),
+      );
       alert("Ocurrió un error al procesar el video.");
     } finally {
       setLoading(false);
@@ -91,15 +98,12 @@ const UploadPage = () => {
           onAutoProcess={handleAutoProcess}
         />
       ) : loading ? (
-        <LoadingScreen
-          loading={loading}
-          fileName={file.name}
-        />
+        <LoadingScreen loading={loading} fileName={file.name} />
       ) : (
         <ResultsPage
           originalVideoUrl={originalVideoUrl}
           jobId={sessionStorage.getItem("currentJobId")}
-          originalFileName={sessionStorage.getItem('originalFileName')}
+          originalFileName={sessionStorage.getItem("originalFileName")}
         />
       )}
     </>
