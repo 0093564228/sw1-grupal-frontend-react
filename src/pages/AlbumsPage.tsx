@@ -1,74 +1,74 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { projectService } from "../services/projectService";
-import type { Project } from "../services/projectService";
+import { albumService } from "../services/albumService";
+import type { Album } from "../services/albumService";
 import { useNavigate } from "react-router-dom";
 
-export default function ProjectsPage() {
+export default function AlbumsPage() {
   const { user, logout } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
 
   const navigate = useNavigate();
 
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
   const [editName, setEditName] = useState("");
 
-  const openProject = (id: number) => {
-    navigate("/upload", { state: { projectId: id } });
+  const openAlbum = (id: number) => {
+    navigate("/upload", { state: { albumId: id } });
   };
 
-  const loadProjects = async () => {
+  const loadAlbums = async () => {
     try {
       if (!user?.id) return;
-      const data = await projectService.getProjects(user.id);
-      setProjects(data);
+      const data = await albumService.getAlbums(user.id);
+      setAlbums(data);
     } finally {
       setLoading(false);
     }
   };
 
-  const createProject = async () => {
+  const createAlbum = async () => {
     if (!name.trim() || !user) return;
 
-    const newProject = await projectService.createProject({
+    const newAlbum = await albumService.createAlbum({
       name,
       user_id: user.id,
     });
 
-    setProjects([...projects, newProject]);
+    setAlbums([...albums, newAlbum]);
     setName("");
   };
 
-  const deleteProject = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este proyecto?")) return;
+  const deleteAlbum = async (id: number) => {
+    if (!confirm("¿Estás seguro de eliminar este álbum?")) return;
 
-    await projectService.deleteProject(id);
-    setProjects(projects.filter((p) => p.id !== id));
+    await albumService.deleteAlbum(id);
+    setAlbums(albums.filter((p) => p.id !== id));
   };
 
-  const startEditing = (project: Project) => {
-    setEditingProject(project);
-    setEditName(project.name);
+  const startEditing = (album: Album) => {
+    setEditingAlbum(album);
+    setEditName(album.name);
   };
 
   const saveEdit = async () => {
-    if (!editingProject || !editName.trim()) return;
+    if (!editingAlbum || !editName.trim()) return;
 
-    const updated = await projectService.updateProject(editingProject.id, {
+    const updated = await albumService.updateAlbum(editingAlbum.id, {
       name: editName,
     });
 
-    setProjects(
-      projects.map((p) => (p.id === editingProject.id ? updated : p))
+    setAlbums(
+      albums.map((p) => (p.id === editingAlbum.id ? updated : p))
     );
 
-    setEditingProject(null);
+    setEditingAlbum(null);
   };
 
   useEffect(() => {
-    loadProjects();
+    loadAlbums();
   }, [user]);
 
   return (
@@ -78,10 +78,10 @@ export default function ProjectsPage() {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <div className="text-left">
             <h1 className="text-4xl font-bold text-white mb-1">
-              Tus Proyectos
+              Tus Álbumes
             </h1>
             <p className="text-gray-300 text-lg">
-              Gestiona tus proyectos antes de procesar archivos.
+              Gestiona tus álbumes antes de procesar archivos.
             </p>
           </div>
 
@@ -97,18 +97,18 @@ export default function ProjectsPage() {
       <div className="max-w-7xl mx-auto px-6 pb-12">
 
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-10 border border-gray-700">
-          <h2 className="text-white text-xl font-semibold mb-4">Crear Proyecto</h2>
+          <h2 className="text-white text-xl font-semibold mb-4">Crear Álbum</h2>
 
           <div className="flex space-x-3">
             <input
               type="text"
-              placeholder="Nombre del proyecto"
+              placeholder="Nombre del álbum"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
             />
             <button
-              onClick={createProject}
+              onClick={createAlbum}
               className="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg"
             >
               Crear
@@ -117,17 +117,17 @@ export default function ProjectsPage() {
         </div>
 
         {loading ? (
-          <p className="text-gray-300">Cargando proyectos...</p>
-        ) : projects.length === 0 ? (
-          <p className="text-gray-300 text-lg">No tienes proyectos todavía.</p>
+          <p className="text-gray-300">Cargando álbumes...</p>
+        ) : albums.length === 0 ? (
+          <p className="text-gray-300 text-lg">No tienes álbumes todavía.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((p) => (
+            {albums.map((p) => (
               <div
                 key={p.id}
                 className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 transition"
               >
-                <div onClick={() => openProject(p.id)} className="cursor-pointer">
+                <div onClick={() => openAlbum(p.id)} className="cursor-pointer">
                   <div className="w-full h-24 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg mb-4 flex items-center justify-center">
                     <span className="text-white text-lg font-semibold">
                       {p.name}
@@ -147,7 +147,7 @@ export default function ProjectsPage() {
                     Editar
                   </button>
                   <button
-                    onClick={() => deleteProject(p.id)}
+                    onClick={() => deleteAlbum(p.id)}
                     className="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg"
                   >
                     Eliminar
@@ -160,7 +160,7 @@ export default function ProjectsPage() {
       </div>
 
       <div className="text-center pb-8">
-        <h2 className="text-white text-2xl font-bold mb-2">Elige un proyecto para continuar</h2>
+        <h2 className="text-white text-2xl font-bold mb-2">Elige un álbum para continuar</h2>
         <svg
           className="w-6 h-6 text-white mx-auto"
           fill="none"
@@ -171,10 +171,10 @@ export default function ProjectsPage() {
         </svg>
       </div>
 
-      {editingProject && (
+      {editingAlbum && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center">
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-96 border border-gray-600">
-            <h2 className="text-white text-xl mb-4">Editar Proyecto</h2>
+            <h2 className="text-white text-xl mb-4">Editar Álbum</h2>
 
             <input
               type="text"
@@ -185,7 +185,7 @@ export default function ProjectsPage() {
 
             <div className="flex justify-end mt-4 gap-3">
               <button
-                onClick={() => setEditingProject(null)}
+                onClick={() => setEditingAlbum(null)}
                 className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
               >
                 Cancelar

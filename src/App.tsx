@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { UploadPage } from "./pages";
 import { LoginPage } from "./pages/LoginPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import ProjectsPage from "./pages/ProjectsPage";
+import AlbumsPage from "./pages/AlbumsPage";
 
 function App() {
   return (
@@ -11,7 +11,7 @@ function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <ProjectsPage />
+            <AlbumsPage />
           </ProtectedRoute>
         }
       />
