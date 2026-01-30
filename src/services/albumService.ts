@@ -1,12 +1,11 @@
 import { apiClient } from "./authService";
 
-export interface Media {
+export interface Video {
     id: number;
     name: string;
-    path: string;
-    format: string;
-    type: string;
     job_id?: string;
+    duration_in_seconds?: number;
+    format: string;
     created_at: string;
 }
 
@@ -15,7 +14,7 @@ export interface Album {
     name: string;
     description?: string;
     created_at: string;
-    media?: Media[];
+    videos?: Video[];
 }
 
 export const albumService = {
