@@ -37,5 +37,10 @@ export const albumService = {
 
     async deleteAlbum(id: number): Promise<void> {
         await apiClient.delete(`/albums/${id}`);
+    },
+
+    async getAlbumVideos(albumId: number): Promise<Video[]> {
+        const res = await apiClient.get(`/albums/${albumId}/videos`);
+        return res.data;
     }
 };

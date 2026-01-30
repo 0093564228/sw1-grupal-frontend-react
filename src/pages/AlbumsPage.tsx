@@ -16,7 +16,7 @@ export default function AlbumsPage() {
   const [editName, setEditName] = useState("");
 
   const openAlbum = (id: number) => {
-    navigate("/upload", { state: { albumId: id } });
+    navigate(`/albums/${id}`);
   };
 
   const loadAlbums = async () => {
