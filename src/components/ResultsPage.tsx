@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from "../context/AuthContext";
 
 interface ResultsPageProps {
   originalVideoUrl: string | null;
@@ -12,8 +11,6 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   jobId,
   originalFileName
 }) => {
-  const { logout } = useAuth();
-
   // Estados del reproductor de video
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -320,19 +317,6 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
       <div className="flex">
         {/* Sección izquierda - Pistas de audio */}
         <div className="flex-1 p-6">
-          {/* Header con botón de regreso y cerrar sesión */}
-          <div className="flex items-center justify-between mb-6">
-            <button className="text-gray-400 hover:text-white transition-colors mr-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h2 className="text-white text-xl font-semibold">Pistas de Audio</h2>
-            <button onClick={logout} className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg">
-              Cerrar sesión
-            </button>
-          </div>
-
           {/* Reproductor de video karaoke ARRIBA de las pistas */}
           <div className="mb-8 max-w-2xl mx-auto">
             <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -424,6 +408,10 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
           {/* Pistas de audio */}
           <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="flex items-center justify-center mb-6">
+              <h2 className="text-white text-xl font-semibold">Pistas de Audio</h2>
+            </div>
+
             {tracks.map((track) => {
               const audioState = audioStates[track.id as keyof typeof audioStates];
               const isPlaying = audioState.isPlaying;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { albumService } from "../services/albumService";
-import type { Video } from "../services/albumService";
+import type { Album, Video } from "../services/albumService";
 import { API_BASE_URL } from "../services/authService";
 
 export default function AlbumVideosPage() {
@@ -9,6 +9,7 @@ export default function AlbumVideosPage() {
     const navigate = useNavigate();
     const [videos, setVideos] = useState<Video[]>([]);
     const [loading, setLoading] = useState(true);
+    const [album, setAlbum] = useState<Album | null>(null);
 
     // Helper function to format duration (seconds -> mm:ss)
     const formatDuration = (seconds?: number) => {
@@ -27,8 +28,10 @@ export default function AlbumVideosPage() {
     const loadVideos = async (id: number) => {
         try {
             setLoading(true);
-            const data = await albumService.getAlbumVideos(id);
-            setVideos(data);
+            const dataAlbum: Album = await albumService.getAlbum(id);
+            setAlbum(dataAlbum);
+            const dataVideos = await albumService.getAlbumVideos(id);
+            setVideos(dataVideos);
         } catch (error) {
             console.error("Error loading videos:", error);
         } finally {
@@ -60,7 +63,7 @@ export default function AlbumVideosPage() {
                             &larr; Volver a Álbumes
                         </button>
                         <h1 className="text-4xl font-bold text-white">
-                            Contenido del Álbum
+                            Álbum {album?.name}
                         </h1>
                     </div>
 
@@ -68,7 +71,7 @@ export default function AlbumVideosPage() {
                         onClick={goToUpload}
                         className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition"
                     >
-                        Subir Nuevo Video
+                        Subir nuevo video
                     </button>
                 </div>
 
@@ -90,7 +93,8 @@ export default function AlbumVideosPage() {
                         {videos.map((video) => (
                             <div
                                 key={video.id}
-                                className="bg-gray-800 rounded-lg overflow-hidden shadow-lg border border-gray-700 hover:border-gray-500 transition group"
+                                className="bg-gray-800 rounded-lg overflow-hidden shadow-lg border border-gray-700 hover:border-gray-500 transition group cursor-pointer"
+                                onClick={() => navigate(`/videos/${video.id}`)}
                             >
                                 {/* Thumbnail */}
                                 <div className="relative aspect-video bg-gray-900">
@@ -121,7 +125,7 @@ export default function AlbumVideosPage() {
                                         {video.name}
                                     </h3>
                                     <p className="text-gray-400 text-sm">
-                                        {new Date(video.created_at).toLocaleDateString()}
+                                        Creado: {new Date(video.created_at).toLocaleString()}
                                     </p>
                                 </div>
                             </div>

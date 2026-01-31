@@ -78,7 +78,7 @@ export default function AlbumsPage() {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <div className="text-left">
             <h1 className="text-4xl font-bold text-white mb-1">
-              Tus Álbumes
+              Tus álbumes
             </h1>
             <p className="text-gray-300 text-lg">
               Gestiona tus álbumes antes de procesar archivos.
@@ -97,7 +97,7 @@ export default function AlbumsPage() {
       <div className="max-w-7xl mx-auto px-6 pb-12">
 
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-10 border border-gray-700">
-          <h2 className="text-white text-xl font-semibold mb-4">Crear Álbum</h2>
+          <h2 className="text-white text-xl font-semibold mb-4">Crear álbum</h2>
 
           <div className="flex space-x-3">
             <input

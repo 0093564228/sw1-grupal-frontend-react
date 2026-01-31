@@ -18,6 +18,11 @@ export interface Album {
 }
 
 export const albumService = {
+    async getAlbum(id: number): Promise<Album> {
+        const res = await apiClient.get(`/albums/${id}`);
+        return res.data;
+    },
+
     async getAlbums(userId: number): Promise<Album[]> {
         const res = await apiClient.get(`/albums?userId=${userId}`);
         return res.data;
@@ -41,6 +46,20 @@ export const albumService = {
 
     async getAlbumVideos(albumId: number): Promise<Video[]> {
         const res = await apiClient.get(`/albums/${albumId}/videos`);
+        return res.data;
+    },
+
+    async getVideo(videoId: number): Promise<Video> {
+        const res = await apiClient.get(`/videos/${videoId}`);
+        return res.data;
+    },
+
+    async moveVideo(videoId: number, targetAlbumId: number): Promise<Video> {
+        const formData = new FormData();
+        formData.append("target_album_id", String(targetAlbumId));
+        const res = await apiClient.put(`/videos/${videoId}/album`, formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+        });
         return res.data;
     }
 };
