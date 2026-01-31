@@ -78,7 +78,7 @@ export default function VideoDetailsPage() {
             <div className="max-w-7xl mx-auto px-6">
 
                 {/* Header Navigation */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                     <button
                         onClick={() => navigate(-1)}
                         className="text-gray-300 hover:text-white flex items-center gap-1"
@@ -88,7 +88,7 @@ export default function VideoDetailsPage() {
 
                     <button
                         onClick={() => setShowMoveModal(true)}
-                        className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+                        className="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
                     >
                         Mover a otro álbum
                     </button>

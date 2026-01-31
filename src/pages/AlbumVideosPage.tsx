@@ -54,7 +54,7 @@ export default function AlbumVideosPage() {
             <div className="max-w-7xl mx-auto px-6">
 
                 {/* Header */}
-                <div className="flex items-center justify-between mb-10">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
                     <div>
                         <button
                             onClick={goBack}
@@ -62,14 +62,14 @@ export default function AlbumVideosPage() {
                         >
                             &larr; Volver a Álbumes
                         </button>
-                        <h1 className="text-4xl font-bold text-white">
+                        <h1 className="text-3xl sm:text-4xl font-bold text-white break-all">
                             Álbum {album?.name}
                         </h1>
                     </div>
 
                     <button
                         onClick={goToUpload}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition"
+                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition"
                     >
                         Subir nuevo video
                     </button>

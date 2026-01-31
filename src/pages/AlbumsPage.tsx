@@ -75,19 +75,19 @@ export default function AlbumsPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
 
       <div className="pt-12 pb-8">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="text-left">
-            <h1 className="text-4xl font-bold text-white mb-1">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="text-left w-full sm:w-auto">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">
               Tus álbumes
             </h1>
-            <p className="text-gray-300 text-lg">
+            <p className="text-gray-300 text-base sm:text-lg">
               Gestiona tus álbumes antes de procesar archivos.
             </p>
           </div>
 
           <button
             onClick={logout}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
           >
             Cerrar sesión
           </button>
