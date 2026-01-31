@@ -97,37 +97,35 @@ export default function AlbumsPage() {
 
       <div className="max-w-7xl mx-auto px-6 pb-12">
 
-        <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-10 border border-gray-700">
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="text-white text-xl font-semibold mb-4">Crear álbum</h2>
-              <div className="flex space-x-3">
-                <input
-                  type="text"
-                  placeholder="Nombre del álbum"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
-                />
-                <button
-                  onClick={createAlbum}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg"
-                >
-                  Crear
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-white text-xl font-semibold mb-2">Buscar</h2>
+        <div className="flex flex-col">
+          <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-4 border border-gray-700">
+            <h2 className="text-white text-xl font-semibold mb-4">Crear álbum</h2>
+            <div className="flex space-x-3">
               <input
                 type="text"
-                placeholder="Filtrar por nombre..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Nombre del álbum"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
               />
+              <button
+                onClick={createAlbum}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg"
+              >
+                Crear
+              </button>
             </div>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-10 border border-gray-700">
+            <h2 className="text-white text-xl font-semibold mb-2">Buscar álbum</h2>
+            <input
+              type="text"
+              placeholder="Filtrar por nombre..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
+            />
           </div>
         </div>
 
@@ -151,9 +149,14 @@ export default function AlbumsPage() {
                       </span>
                     </div>
 
-                    <p className="text-gray-300 text-sm text-center">
-                      Creado: {new Date(p.created_at).toLocaleString()}
-                    </p>
+                    <div className="flex justify-between">
+                      <p className="text-gray-300 text-sm text-center">
+                        Creado: {new Date(p.created_at).toLocaleString()}
+                      </p>
+                      <p className="text-gray-300 text-sm text-center">
+                        Videos: {p.videos?.length || 0}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex gap-2 mt-6">

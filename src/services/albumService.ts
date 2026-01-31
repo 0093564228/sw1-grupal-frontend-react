@@ -61,5 +61,14 @@ export const albumService = {
             headers: { "Content-Type": "multipart/form-data" }
         });
         return res.data;
+    },
+
+    async updateVideo(videoId: number, name: string): Promise<Video> {
+        const res = await apiClient.put(`/videos/${videoId}`, { name });
+        return res.data;
+    },
+
+    async deleteVideo(videoId: number): Promise<void> {
+        await apiClient.delete(`/videos/${videoId}`);
     }
 };
