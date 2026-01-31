@@ -88,9 +88,9 @@ export default function VideoDetailsPage() {
 
                     <button
                         onClick={() => setShowMoveModal(true)}
-                        className="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+                        className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
                     >
-                        Mover a otro álbum
+                        Mover video a otro álbum
                     </button>
                 </div>
 

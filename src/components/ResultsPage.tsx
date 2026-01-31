@@ -53,9 +53,9 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   };
 
   const handleFullscreen = () => {
-    if (videoContainerRef.current) {
+    if (videoRef.current) {
       if (!document.fullscreenElement) {
-        videoContainerRef.current.requestFullscreen();
+        videoRef.current.requestFullscreen({ navigationUI: 'hide' });
       } else {
         document.exitFullscreen();
       }
@@ -297,6 +297,12 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
     }
   };
 
+  const handleDownloadVideoKaraoke = () => {
+    if (jobId) {
+      window.location.href = `${API_BASE_URL}/descargar/video_karaoke/${encodeURIComponent(jobId)}`;
+    }
+  };
+
   const handleDownloadOriginal = () => {
     if (jobId) {
       window.location.href = `${API_BASE_URL}/descargar/audio_original/${encodeURIComponent(jobId)}`;
@@ -345,22 +351,22 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
     <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
       <div className="flex flex-col lg:flex-row">
         {/* Sección izquierda - Pistas de audio */}
-        <div className="flex-1 p-4 lg:p-6">
+        <div className="flex-1 p-4 lg:p-6 lg:pt-0">
           {/* Reproductor de video karaoke ARRIBA de las pistas */}
           <div className="mb-8 max-w-2xl mx-auto">
             <div className="bg-white rounded-2xl shadow-lg p-4 lg:p-6">
               {/* Título del video */}
-              <h3 className="text-black text-lg font-medium mb-4">
+              <h3 className="text-lg font-medium mb-4">
                 {originalFileName ? `${originalFileName} - Karaoke` : 'Video Karaoke'}
               </h3>
 
               {/* Reproductor de video */}
-              <div className="bg-black rounded-lg overflow-hidden" ref={videoContainerRef}>
-                <div className="relative">
+              <div className="bg-black rounded-lg overflow-hidden">
+                <div className="relative fullscreen:bg-teal-500 fullscreen:h-screen">
                   <video
                     ref={videoRef}
                     src={jobId ? `${API_BASE_URL}/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : originalVideoUrl || undefined}
-                    className="w-full h-48 sm:h-64 md:h-80 object-cover"
+                    className="w-full h-48 sm:h-64 md:h-80 object-cover fullscreen:w-full fullscreen:h-screen"
                     onLoadedMetadata={() => {
                       if (videoRef.current) {
                         setDuration(videoRef.current.duration);
@@ -533,21 +539,21 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
         {/* Sección derecha - Panel de descarga */}
         <div className="w-full lg:w-80 bg-gray-900 p-6 flex flex-col justify-start border-t lg:border-t-0 lg:border-l border-gray-700">
-          {/* Botón Descargar Todo - alineado con el centro del video */}
-          <div className="mb-8">
-            <button
-              onClick={handleDownloadAll}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Descargar Todo</span>
-            </button>
-          </div>
-
           {/* Botones de descarga por audio - alineados exactamente con cada card */}
           <div className="space-y-4">
+            {/* Descargar Video Karaoke - altura exacta de card */}
+            <div className="h-20 flex items-center">
+              <button
+                onClick={handleDownloadVideoKaraoke}
+                className="w-full bg-rose-600 hover:bg-rose-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Descargar Video Karaoke</span>
+              </button>
+            </div>
+
             {/* Descargar Audio Original - altura exacta de card */}
             <div className="h-20 flex items-center">
               <button
@@ -584,6 +590,19 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <span>Descargar Audio Instrumental</span>
+              </button>
+            </div>
+
+            {/* Botón Descargar Todo - alineado con el centro del video */}
+            <div className="mb-8">
+              <button
+                onClick={handleDownloadAll}
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Descargar Todo</span>
               </button>
             </div>
           </div>
