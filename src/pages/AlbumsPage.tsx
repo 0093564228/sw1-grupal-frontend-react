@@ -9,6 +9,7 @@ export default function AlbumsPage() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const navigate = useNavigate();
 
@@ -97,22 +98,36 @@ export default function AlbumsPage() {
       <div className="max-w-7xl mx-auto px-6 pb-12">
 
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-10 border border-gray-700">
-          <h2 className="text-white text-xl font-semibold mb-4">Crear álbum</h2>
+          <div className="flex flex-col gap-6">
+            <div>
+              <h2 className="text-white text-xl font-semibold mb-4">Crear álbum</h2>
+              <div className="flex space-x-3">
+                <input
+                  type="text"
+                  placeholder="Nombre del álbum"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
+                />
+                <button
+                  onClick={createAlbum}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg"
+                >
+                  Crear
+                </button>
+              </div>
+            </div>
 
-          <div className="flex space-x-3">
-            <input
-              type="text"
-              placeholder="Nombre del álbum"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
-            />
-            <button
-              onClick={createAlbum}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg"
-            >
-              Crear
-            </button>
+            <div>
+              <h2 className="text-white text-xl font-semibold mb-2">Buscar</h2>
+              <input
+                type="text"
+                placeholder="Filtrar por nombre..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
+              />
+            </div>
           </div>
         </div>
 
@@ -122,39 +137,41 @@ export default function AlbumsPage() {
           <p className="text-gray-300 text-lg">No tienes álbumes todavía.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {albums.map((p) => (
-              <div
-                key={p.id}
-                className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 transition"
-              >
-                <div onClick={() => openAlbum(p.id)} className="cursor-pointer">
-                  <div className="w-full h-24 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg mb-4 flex items-center justify-center">
-                    <span className="text-white text-lg font-semibold">
-                      {p.name}
-                    </span>
+            {albums
+              .filter(a => a.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map((p) => (
+                <div
+                  key={p.id}
+                  className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 transition"
+                >
+                  <div onClick={() => openAlbum(p.id)} className="cursor-pointer">
+                    <div className="w-full h-24 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg mb-4 flex items-center justify-center">
+                      <span className="text-white text-lg font-semibold">
+                        {p.name}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-300 text-sm text-center">
+                      Creado: {new Date(p.created_at).toLocaleString()}
+                    </p>
                   </div>
 
-                  <p className="text-gray-300 text-sm text-center">
-                    Creado: {new Date(p.created_at).toLocaleString()}
-                  </p>
+                  <div className="flex gap-2 mt-6">
+                    <button
+                      onClick={() => startEditing(p)}
+                      className="w-1/2 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => deleteAlbum(p.id)}
+                      className="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex gap-2 mt-6">
-                  <button
-                    onClick={() => startEditing(p)}
-                    className="w-1/2 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => deleteAlbum(p.id)}
-                    className="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>

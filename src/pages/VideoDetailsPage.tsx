@@ -96,9 +96,7 @@ export default function VideoDetailsPage() {
 
                 {/* Results Page Component Reuse */}
                 {/* ResultsPage espera props específicas que adaptamos desde nuestro objeto video */}
-                {/* Nota: ResultsPage usa 127.0.0.1:8000 hardcoded en algunos links, 
-            idealmente deberia usar API_BASE_URL. El video download usa job_id.
-        */}
+                {/* ResultsPage espera props específicas que adaptamos desde nuestro objeto video */}
                 <div className="bg-gray-900 rounded-xl overflow-hidden shadow-2xl border border-gray-700">
                     <ResultsPage
                         originalVideoUrl={null} // No tenemos URL local, el componente usa job_id para downloads/preview

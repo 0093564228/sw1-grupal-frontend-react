@@ -10,6 +10,7 @@ export default function AlbumVideosPage() {
     const [videos, setVideos] = useState<Video[]>([]);
     const [loading, setLoading] = useState(true);
     const [album, setAlbum] = useState<Album | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Helper function to format duration (seconds -> mm:ss)
     const formatDuration = (seconds?: number) => {
@@ -89,47 +90,62 @@ export default function AlbumVideosPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {videos.map((video) => (
-                            <div
-                                key={video.id}
-                                className="bg-gray-800 rounded-lg overflow-hidden shadow-lg border border-gray-700 hover:border-gray-500 transition group cursor-pointer"
-                                onClick={() => navigate(`/videos/${video.id}`)}
-                            >
-                                {/* Thumbnail */}
-                                <div className="relative aspect-video bg-gray-900">
-                                    {video.job_id ? (
-                                        <img
-                                            src={`${API_BASE_URL}/descargar/thumbnail/${video.job_id}`}
-                                            alt={video.name}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).src = "https://via.placeholder.com/320x180?text=No+Thumbnail";
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                            Sin vista previa
+                    <div>
+                        {/* Search Bar */}
+                        <div className="mb-6">
+                            <input
+                                type="text"
+                                placeholder="Buscar videos..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full md:w-1/2 lg:w-1/3 px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:border-blue-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {videos
+                                .filter(v => v.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                .map((video) => (
+                                    <div
+                                        key={video.id}
+                                        className="bg-gray-800 rounded-lg overflow-hidden shadow-lg border border-gray-700 hover:border-gray-500 transition group cursor-pointer"
+                                        onClick={() => navigate(`/videos/${video.id}`)}
+                                    >
+                                        {/* Thumbnail */}
+                                        <div className="relative aspect-video bg-gray-900">
+                                            {video.job_id ? (
+                                                <img
+                                                    src={`${API_BASE_URL}/descargar/thumbnail/${video.job_id}`}
+                                                    alt={video.name}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = "https://via.placeholder.com/320x180?text=No+Thumbnail";
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                    Sin vista previa
+                                                </div>
+                                            )}
+
+                                            {/* Duration Badge */}
+                                            <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                                {formatDuration(video.duration_in_seconds)}
+                                            </div>
                                         </div>
-                                    )}
 
-                                    {/* Duration Badge */}
-                                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                                        {formatDuration(video.duration_in_seconds)}
+                                        {/* Info */}
+                                        <div className="p-4">
+                                            <h3 className="text-white font-semibold text-lg truncate mb-1" title={video.name}>
+                                                {video.name}
+                                            </h3>
+                                            <p className="text-gray-400 text-sm">
+                                                Creado: {new Date(video.created_at).toLocaleString()}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* Info */}
-                                <div className="p-4">
-                                    <h3 className="text-white font-semibold text-lg truncate mb-1" title={video.name}>
-                                        {video.name}
-                                    </h3>
-                                    <p className="text-gray-400 text-sm">
-                                        Creado: {new Date(video.created_at).toLocaleString()}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
+                                ))}
+                        </div>
                     </div>
                 )}
             </div>

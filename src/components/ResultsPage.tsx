@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { API_BASE_URL } from '../services/authService';
 
 interface ResultsPageProps {
   originalVideoUrl: string | null;
@@ -20,9 +21,9 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
   // Estados de las pistas de audio
   const [audioStates, setAudioStates] = useState({
-    original: { isPlaying: false, currentTime: 0, duration: 0 },
-    vocals: { isPlaying: false, currentTime: 0, duration: 0 },
-    background: { isPlaying: false, currentTime: 0, duration: 0 }
+    original: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 },
+    vocals: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 },
+    background: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 }
   });
 
   // Referencias
@@ -30,6 +31,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   const originalAudioRef = useRef<HTMLAudioElement>(null);
   const vocalsAudioRef = useRef<HTMLAudioElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // Funciones del reproductor de video
   const handleVideoPlayPause = () => {
@@ -50,20 +52,31 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
     }
   };
 
-  // El volumen se controla con mute/unmute para simplificar
+  const handleFullscreen = () => {
+    if (videoContainerRef.current) {
+      if (!document.fullscreenElement) {
+        videoContainerRef.current.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const handleToggleMute = () => {
     const newMuted = !isMuted;
     setIsMuted(newMuted);
     if (videoRef.current) {
       videoRef.current.muted = newMuted;
-      if (newMuted) {
-        setVolume(0);
-      } else {
-        setVolume(1);
-        videoRef.current.volume = 1;
-      }
     }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+    }
+    setIsMuted(newVolume === 0);
   };
 
   const formatTime = (timeInSeconds: number) => {
@@ -147,6 +160,22 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
         ref.current.pause();
       }
     });
+  };
+
+  const handleTrackVolumeChange = (trackId: keyof typeof audioStates, newVolume: number) => {
+    setAudioStates(prev => ({
+      ...prev,
+      [trackId]: { ...prev[trackId], volume: newVolume }
+    }));
+
+    let audioEl: HTMLAudioElement | null = null;
+    if (trackId === 'original') audioEl = originalAudioRef.current;
+    if (trackId === 'vocals') audioEl = vocalsAudioRef.current;
+    if (trackId === 'background') audioEl = backgroundAudioRef.current;
+
+    if (audioEl) {
+      audioEl.volume = newVolume;
+    }
   };
 
   // Función para actualizar estado de audio específico
@@ -264,25 +293,25 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   // Funciones de descarga
   const handleDownloadAll = () => {
     if (jobId) {
-      window.location.href = `http://127.0.0.1:8000/descargar/todo/${encodeURIComponent(jobId)}`;
+      window.location.href = `${API_BASE_URL}/descargar/todo/${encodeURIComponent(jobId)}`;
     }
   };
 
   const handleDownloadOriginal = () => {
     if (jobId) {
-      window.location.href = `http://127.0.0.1:8000/descargar/audio_original/${encodeURIComponent(jobId)}`;
+      window.location.href = `${API_BASE_URL}/descargar/audio_original/${encodeURIComponent(jobId)}`;
     }
   };
 
   const handleDownloadVocals = () => {
     if (jobId) {
-      window.location.href = `http://127.0.0.1:8000/descargar/audio_vocals/${encodeURIComponent(jobId)}`;
+      window.location.href = `${API_BASE_URL}/descargar/audio_vocals/${encodeURIComponent(jobId)}`;
     }
   };
 
   const handleDownloadInstrumental = () => {
     if (jobId) {
-      window.location.href = `http://127.0.0.1:8000/descargar/audio_instrumental/${encodeURIComponent(jobId)}`;
+      window.location.href = `${API_BASE_URL}/descargar/audio_instrumental/${encodeURIComponent(jobId)}`;
     }
   };
 
@@ -326,11 +355,11 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
               </h3>
 
               {/* Reproductor de video */}
-              <div className="bg-black rounded-lg overflow-hidden">
+              <div className="bg-black rounded-lg overflow-hidden" ref={videoContainerRef}>
                 <div className="relative">
                   <video
                     ref={videoRef}
-                    src={jobId ? `http://127.0.0.1:8000/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : originalVideoUrl || undefined}
+                    src={jobId ? `${API_BASE_URL}/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : originalVideoUrl || undefined}
                     className="w-full h-48 sm:h-64 md:h-80 object-cover"
                     onLoadedMetadata={() => {
                       if (videoRef.current) {
@@ -377,20 +406,42 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                       {/* Duración total */}
                       <span className="text-white text-xs sm:text-sm w-10">{formatTime(duration)}</span>
 
-                      {/* Botón de volumen */}
+                      {/* Control de volumen */}
+                      <div className="flex items-center space-x-2 w-24 sm:w-32 hidden sm:flex">
+                        <button
+                          onClick={handleToggleMute}
+                          className="text-white hover:text-gray-300 transition-colors"
+                        >
+                          {isMuted || volume === 0 ? (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM15.53 9.47a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-2.69-2.69a.75.75 0 010 1.06L11.72 9.53a.75.75 0 01-1.06-1.06l1.06-1.06a.75.75 0 011.06 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={volume}
+                          onChange={handleVolumeChange}
+                          className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
+
+                      {/* Botón de pantalla completa */}
                       <button
-                        onClick={handleToggleMute}
-                        className="text-white hover:text-gray-300 transition-colors hidden sm:block"
+                        onClick={handleFullscreen}
+                        className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0"
                       >
-                        {isMuted || volume === 0 ? (
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM15.53 9.47a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-2.69-2.69a.75.75 0 010 1.06L11.72 9.53a.75.75 0 01-1.06-1.06l1.06-1.06a.75.75 0 011.06 0z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z" clipRule="evenodd" />
-                          </svg>
-                        )}
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -410,17 +461,19 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
               const isPlaying = audioState.isPlaying;
               const currentTime = audioState.currentTime;
               const duration = audioState.duration;
+              const volume = audioState.volume;
+
+              // Usar forma base por pista y animarla solo si está reproduciendo
               const baseWaves = getBaseWaves(track.id);
               const dynamicWaves = generateDynamicWaves(baseWaves, isPlaying, currentTime, duration);
 
               return (
                 <div
                   key={track.id}
-                  className={`bg-gray-800 rounded-lg p-3 sm:p-4 cursor-pointer transition-all duration-200 hover:bg-gray-700 ${isPlaying ? 'ring-2 ring-blue-500 bg-gray-750' : ''
+                  className={`bg-gray-800 rounded-lg p-3 sm:p-4 transition-all duration-200 hover:bg-gray-700 ${isPlaying ? 'ring-2 ring-blue-500 bg-gray-750' : ''
                     }`}
-                  onClick={() => isPlaying ? handlePause() : handlePlay(track.id)}
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => isPlaying ? handlePause() : handlePlay(track.id)}>
                     <h3 className="text-white font-medium text-base sm:text-lg">{track.title}</h3>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <button className="w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center transition-colors">
@@ -440,8 +493,26 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                     </div>
                   </div>
 
+                  {/* Volume Control */}
+                  <div className="flex items-center space-x-2 mb-2 px-1">
+                    <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z" clipRule="evenodd" />
+                    </svg>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={volume}
+                      onClick={(e) => e.stopPropagation()} // Prevent click from triggering play/pause
+                      onChange={(e) => handleTrackVolumeChange(track.id, parseFloat(e.target.value))}
+                      className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+
+
                   {/* Waveform visual dinámico */}
-                  <div className="flex items-end space-x-0 h-12">
+                  <div className="flex items-end space-x-0 h-12 pointer-events-none">
                     {dynamicWaves.map((height, index) => (
                       <div
                         key={index}
@@ -522,17 +593,17 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
       {/* Elementos de audio ocultos */}
       <audio
         ref={originalAudioRef}
-        src={jobId ? `http://127.0.0.1:8000/descargar/audio_original/${encodeURIComponent(jobId)}` : undefined}
+        src={jobId ? `${API_BASE_URL}/descargar/audio_original/${encodeURIComponent(jobId)}` : undefined}
         preload="metadata"
       />
       <audio
         ref={vocalsAudioRef}
-        src={jobId ? `http://127.0.0.1:8000/descargar/audio_vocals/${encodeURIComponent(jobId)}` : undefined}
+        src={jobId ? `${API_BASE_URL}/descargar/audio_vocals/${encodeURIComponent(jobId)}` : undefined}
         preload="metadata"
       />
       <audio
         ref={backgroundAudioRef}
-        src={jobId ? `http://127.0.0.1:8000/descargar/audio_instrumental/${encodeURIComponent(jobId)}` : undefined}
+        src={jobId ? `${API_BASE_URL}/descargar/audio_instrumental/${encodeURIComponent(jobId)}` : undefined}
         preload="metadata"
       />
     </div>
