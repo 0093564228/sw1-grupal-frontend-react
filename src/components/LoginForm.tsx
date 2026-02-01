@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import type { LoginRequest } from "../services/authService";
+import { type LoginRequest, API_BASE_URL } from "../services/authService";
 import { Eye, EyeOff } from "lucide-react";
 
 interface LoginFormProps {
@@ -36,7 +36,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
     } catch (error: any) {
       // Mejorar mensajes de error
       if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error') || !error.response) {
-        setError("Error de conexión. Verifica que el backend esté corriendo en http://127.0.0.1:8000");
+        setError(`Error de conexión. Verifica que el backend esté corriendo en ${API_BASE_URL}`);
       } else if (error.response?.status === 401) {
         setError("Email o contraseña incorrectos");
       } else if (error.response?.status === 422) {
@@ -108,8 +108,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
             type="submit"
             disabled={loading}
             className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               }`}
           >
             {loading ? "Iniciando sesión..." : "Iniciar Sesión"}

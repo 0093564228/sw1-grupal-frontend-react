@@ -4,6 +4,11 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    function ({ addVariant }) {
+      // Adds a `fullscreen:` variant for Tailwind
+      addVariant('fullscreen', '&:fullscreen');
+    }
+  ],
 }
 

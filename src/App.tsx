@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { UploadPage } from "./pages";
+import { UploadPage, AlbumVideosPage, VideoDetailsPage } from "./pages";
 import { LoginPage } from "./pages/LoginPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import AlbumsPage from "./pages/AlbumsPage";
@@ -20,6 +20,22 @@ function App() {
         element={
           <ProtectedRoute>
             <UploadPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/videos/:jobId"
+        element={
+          <ProtectedRoute>
+            <VideoDetailsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/albums/:albumId"
+        element={
+          <ProtectedRoute>
+            <AlbumVideosPage />
           </ProtectedRoute>
         }
       />

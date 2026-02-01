@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { VideoPlayer } from "./VideoPlayer";
+import { API_BASE_URL } from "../services/authService";
 
 interface VideoTabsProps {
   originalVideoUrl: string | null;
@@ -24,14 +25,14 @@ export const VideoTabs = ({ originalVideoUrl, jobId, originalFileName }: VideoTa
       id: 'karaoke' as TabType,
       label: 'Video Karaoke',
       disabled: !jobId,
-      getVideoUrl: () => jobId ? `http://localhost:8000/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : null,
+      getVideoUrl: () => jobId ? `${API_BASE_URL}/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : null,
       getTitle: () => `${originalFileName || 'Video'} - Karaoke`
     },
     {
       id: 'instrumental' as TabType,
       label: 'Pista Instrumental',
       disabled: !jobId,
-      getVideoUrl: () => jobId ? `http://localhost:8000/descargar/video_instrumental/${encodeURIComponent(jobId)}` : null,
+      getVideoUrl: () => jobId ? `${API_BASE_URL}/descargar/video_instrumental/${encodeURIComponent(jobId)}` : null,
       getTitle: () => `${originalFileName || 'Video'} - Instrumental`
     }
   ];
@@ -51,10 +52,10 @@ export const VideoTabs = ({ originalVideoUrl, jobId, originalFileName }: VideoTa
               onClick={() => setActiveTab(tab.id)}
               disabled={tab.disabled}
               className={`flex-1 px-6 py-4 text-sm font-medium transition-colors duration-200 ${activeTab === tab.id
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                  : tab.disabled
-                    ? 'text-gray-400 cursor-not-allowed bg-gray-50'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                : tab.disabled
+                  ? 'text-gray-400 cursor-not-allowed bg-gray-50'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
             >
               <div className="flex items-center justify-center space-x-2">

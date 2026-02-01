@@ -1,19 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from '../services/authService';
 
 interface ResultsPageProps {
-  originalVideoUrl: string | null;
   jobId: string | null;
   originalFileName: string | null;
+  albumName?: string | null;
 }
 
 export const ResultsPage: React.FC<ResultsPageProps> = ({
-  originalVideoUrl,
   jobId,
-  originalFileName
+  originalFileName,
+  albumName
 }) => {
-  const { logout } = useAuth();
-
   // Estados del reproductor de video
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -23,9 +21,9 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
   // Estados de las pistas de audio
   const [audioStates, setAudioStates] = useState({
-    original: { isPlaying: false, currentTime: 0, duration: 0 },
-    vocals: { isPlaying: false, currentTime: 0, duration: 0 },
-    background: { isPlaying: false, currentTime: 0, duration: 0 }
+    original: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 },
+    vocals: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 },
+    background: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 }
   });
 
   // Referencias
@@ -53,20 +51,31 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
     }
   };
 
-  // El volumen se controla con mute/unmute para simplificar
+  const handleFullscreen = () => {
+    if (videoRef.current) {
+      if (!document.fullscreenElement) {
+        videoRef.current.requestFullscreen({ navigationUI: 'hide' });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const handleToggleMute = () => {
     const newMuted = !isMuted;
     setIsMuted(newMuted);
     if (videoRef.current) {
       videoRef.current.muted = newMuted;
-      if (newMuted) {
-        setVolume(0);
-      } else {
-        setVolume(1);
-        videoRef.current.volume = 1;
-      }
     }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+    }
+    setIsMuted(newVolume === 0);
   };
 
   const formatTime = (timeInSeconds: number) => {
@@ -150,6 +159,22 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
         ref.current.pause();
       }
     });
+  };
+
+  const handleTrackVolumeChange = (trackId: keyof typeof audioStates, newVolume: number) => {
+    setAudioStates(prev => ({
+      ...prev,
+      [trackId]: { ...prev[trackId], volume: newVolume }
+    }));
+
+    let audioEl: HTMLAudioElement | null = null;
+    if (trackId === 'original') audioEl = originalAudioRef.current;
+    if (trackId === 'vocals') audioEl = vocalsAudioRef.current;
+    if (trackId === 'background') audioEl = backgroundAudioRef.current;
+
+    if (audioEl) {
+      audioEl.volume = newVolume;
+    }
   };
 
   // Función para actualizar estado de audio específico
@@ -267,25 +292,31 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   // Funciones de descarga
   const handleDownloadAll = () => {
     if (jobId) {
-      window.location.href = `http://127.0.0.1:8000/descargar/todo/${encodeURIComponent(jobId)}`;
+      window.location.href = `${API_BASE_URL}/descargar/todo/${encodeURIComponent(jobId)}`;
+    }
+  };
+
+  const handleDownloadVideoKaraoke = () => {
+    if (jobId) {
+      window.location.href = `${API_BASE_URL}/descargar/video_karaoke/${encodeURIComponent(jobId)}`;
     }
   };
 
   const handleDownloadOriginal = () => {
     if (jobId) {
-      window.location.href = `http://127.0.0.1:8000/descargar/audio_original/${encodeURIComponent(jobId)}`;
+      window.location.href = `${API_BASE_URL}/descargar/audio_original/${encodeURIComponent(jobId)}`;
     }
   };
 
   const handleDownloadVocals = () => {
     if (jobId) {
-      window.location.href = `http://127.0.0.1:8000/descargar/audio_vocals/${encodeURIComponent(jobId)}`;
+      window.location.href = `${API_BASE_URL}/descargar/audio_vocals/${encodeURIComponent(jobId)}`;
     }
   };
 
   const handleDownloadInstrumental = () => {
     if (jobId) {
-      window.location.href = `http://127.0.0.1:8000/descargar/audio_instrumental/${encodeURIComponent(jobId)}`;
+      window.location.href = `${API_BASE_URL}/descargar/audio_instrumental/${encodeURIComponent(jobId)}`;
     }
   };
 
@@ -317,37 +348,26 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
   return (
     <div className="bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-      <div className="flex">
+      <div className="flex flex-col lg:flex-row">
         {/* Sección izquierda - Pistas de audio */}
-        <div className="flex-1 p-6">
-          {/* Header con botón de regreso y cerrar sesión */}
-          <div className="flex items-center justify-between mb-6">
-            <button className="text-gray-400 hover:text-white transition-colors mr-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h2 className="text-white text-xl font-semibold">Pistas de Audio</h2>
-            <button onClick={logout} className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg">
-              Cerrar sesión
-            </button>
-          </div>
-
+        <div className="flex-1 p-4 lg:p-6 lg:pt-0">
           {/* Reproductor de video karaoke ARRIBA de las pistas */}
           <div className="mb-8 max-w-2xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="bg-white rounded-2xl shadow-lg p-4 lg:p-6">
               {/* Título del video */}
-              <h3 className="text-black text-lg font-medium mb-4">
+              <div className="text-sm font-medium">
+                {albumName ? `Álbum: ${albumName}` : ''}
+              </div>
+              <h3 className="text-lg font-medium mb-4">
                 {originalFileName ? `${originalFileName} - Karaoke` : 'Video Karaoke'}
               </h3>
-
               {/* Reproductor de video */}
               <div className="bg-black rounded-lg overflow-hidden">
-                <div className="relative">
+                <div className="relative fullscreen:bg-teal-500 fullscreen:h-screen">
                   <video
                     ref={videoRef}
-                    src={jobId ? `http://127.0.0.1:8000/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : originalVideoUrl || undefined}
-                    className="w-full h-80 object-cover"
+                    src={jobId ? `${API_BASE_URL}/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : undefined}
+                    className="w-full h-48 sm:h-64 md:h-80 object-cover fullscreen:w-full fullscreen:h-screen"
                     onLoadedMetadata={() => {
                       if (videoRef.current) {
                         setDuration(videoRef.current.duration);
@@ -355,26 +375,26 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                     }}
                   />
                   {/* Overlay de controles personalizados */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
-                    <div className="flex items-center space-x-4">
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 p-2 sm:p-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
                       {/* Botón de play */}
                       <button
                         onClick={handleVideoPlayPause}
-                        className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                        className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors flex-shrink-0"
                       >
                         {isPlaying ? (
-                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
                         ) : (
-                          <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                           </svg>
                         )}
                       </button>
 
                       {/* Tiempo actual */}
-                      <span className="text-white text-sm">{formatTime(currentTime)}</span>
+                      <span className="text-white text-xs sm:text-sm w-10 text-right">{formatTime(currentTime)}</span>
 
                       {/* Barra de progreso */}
                       <div className="flex-1 h-1 bg-gray-600 rounded-full cursor-pointer" onClick={(e) => {
@@ -391,26 +411,41 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                       </div>
 
                       {/* Duración total */}
-                      <span className="text-white text-sm">{formatTime(duration)}</span>
+                      <span className="text-white text-xs sm:text-sm w-10">{formatTime(duration)}</span>
 
-                      {/* Botón de volumen */}
-                      <button
-                        onClick={handleToggleMute}
-                        className="text-white hover:text-gray-300 transition-colors"
-                      >
-                        {isMuted || volume === 0 ? (
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM15.53 9.47a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-2.69-2.69a.75.75 0 010 1.06L11.72 9.53a.75.75 0 01-1.06-1.06l1.06-1.06a.75.75 0 011.06 0z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </button>
+                      {/* Control de volumen */}
+                      <div className="flex items-center space-x-2 w-24 sm:w-32 hidden sm:flex">
+                        <button
+                          onClick={handleToggleMute}
+                          className="text-white hover:text-gray-300 transition-colors"
+                        >
+                          {isMuted || volume === 0 ? (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM15.53 9.47a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-2.69-2.69a.75.75 0 010 1.06L11.72 9.53a.75.75 0 01-1.06-1.06l1.06-1.06a.75.75 0 011.06 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={volume}
+                          onChange={handleVolumeChange}
+                          className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+
 
                       {/* Botón de pantalla completa */}
-                      <button className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                      <button
+                        onClick={handleFullscreen}
+                        className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0"
+                      >
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                         </svg>
@@ -424,11 +459,17 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
           {/* Pistas de audio */}
           <div className="space-y-4 max-w-2xl mx-auto">
+            <div className="flex items-center justify-center mb-6">
+              <h2 className="text-white text-xl font-semibold">Pistas de Audio</h2>
+            </div>
+
             {tracks.map((track) => {
               const audioState = audioStates[track.id as keyof typeof audioStates];
               const isPlaying = audioState.isPlaying;
               const currentTime = audioState.currentTime;
               const duration = audioState.duration;
+              const volume = audioState.volume;
+
               // Usar forma base por pista y animarla solo si está reproduciendo
               const baseWaves = getBaseWaves(track.id);
               const dynamicWaves = generateDynamicWaves(baseWaves, isPlaying, currentTime, duration);
@@ -436,13 +477,12 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
               return (
                 <div
                   key={track.id}
-                  className={`bg-gray-800 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:bg-gray-700 ${isPlaying ? 'ring-2 ring-blue-500 bg-gray-750' : ''
+                  className={`bg-gray-800 rounded-lg p-3 sm:p-4 transition-all duration-200 hover:bg-gray-700 ${isPlaying ? 'ring-2 ring-blue-500 bg-gray-750' : ''
                     }`}
-                  onClick={() => isPlaying ? handlePause() : handlePlay(track.id)}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-white font-medium text-lg">{track.title}</h3>
-                    <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => isPlaying ? handlePause() : handlePlay(track.id)}>
+                    <h3 className="text-white font-medium text-base sm:text-lg">{track.title}</h3>
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                       <button className="w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center transition-colors">
                         {isPlaying ? (
                           <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -454,14 +494,32 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                           </svg>
                         )}
                       </button>
-                      <span className="text-gray-400 text-sm font-mono">
+                      <span className="text-gray-400 text-xs sm:text-sm font-mono">
                         {formatTime(currentTime)} / {formatTime(duration)}
                       </span>
                     </div>
                   </div>
 
+                  {/* Volume Control */}
+                  <div className="flex items-center space-x-2 mb-2 px-1">
+                    <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z" clipRule="evenodd" />
+                    </svg>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={volume}
+                      onClick={(e) => e.stopPropagation()} // Prevent click from triggering play/pause
+                      onChange={(e) => handleTrackVolumeChange(track.id, parseFloat(e.target.value))}
+                      className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+
+
                   {/* Waveform visual dinámico */}
-                  <div className="flex items-end space-x-0 h-12">
+                  <div className="flex items-end space-x-0 h-12 pointer-events-none">
                     {dynamicWaves.map((height, index) => (
                       <div
                         key={index}
@@ -481,22 +539,22 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
         </div>
 
         {/* Sección derecha - Panel de descarga */}
-        <div className="w-80 bg-gray-900 p-6 flex flex-col justify-start">
-          {/* Botón Descargar Todo - alineado con el centro del video */}
-          <div className="mb-8">
-            <button
-              onClick={handleDownloadAll}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Descargar Todo</span>
-            </button>
-          </div>
-
+        <div className="w-full lg:w-80 bg-gray-900 p-6 flex flex-col justify-start border-t lg:border-t-0 lg:border-l border-gray-700">
           {/* Botones de descarga por audio - alineados exactamente con cada card */}
           <div className="space-y-4">
+            {/* Descargar Video Karaoke - altura exacta de card */}
+            <div className="h-20 flex items-center">
+              <button
+                onClick={handleDownloadVideoKaraoke}
+                className="w-full bg-rose-600 hover:bg-rose-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Descargar Video Karaoke</span>
+              </button>
+            </div>
+
             {/* Descargar Audio Original - altura exacta de card */}
             <div className="h-20 flex items-center">
               <button
@@ -535,6 +593,19 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 <span>Descargar Audio Instrumental</span>
               </button>
             </div>
+
+            {/* Botón Descargar Todo - alineado con el centro del video */}
+            <div className="mb-8">
+              <button
+                onClick={handleDownloadAll}
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Descargar Todo</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -542,17 +613,17 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
       {/* Elementos de audio ocultos */}
       <audio
         ref={originalAudioRef}
-        src={jobId ? `http://127.0.0.1:8000/descargar/audio_original/${encodeURIComponent(jobId)}` : undefined}
+        src={jobId ? `${API_BASE_URL}/descargar/audio_original/${encodeURIComponent(jobId)}` : undefined}
         preload="metadata"
       />
       <audio
         ref={vocalsAudioRef}
-        src={jobId ? `http://127.0.0.1:8000/descargar/audio_vocals/${encodeURIComponent(jobId)}` : undefined}
+        src={jobId ? `${API_BASE_URL}/descargar/audio_vocals/${encodeURIComponent(jobId)}` : undefined}
         preload="metadata"
       />
       <audio
         ref={backgroundAudioRef}
-        src={jobId ? `http://127.0.0.1:8000/descargar/audio_instrumental/${encodeURIComponent(jobId)}` : undefined}
+        src={jobId ? `${API_BASE_URL}/descargar/audio_instrumental/${encodeURIComponent(jobId)}` : undefined}
         preload="metadata"
       />
     </div>

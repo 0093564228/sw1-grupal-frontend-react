@@ -3,12 +3,14 @@ import { useAuth } from "../context/AuthContext";
 import { albumService } from "../services/albumService";
 import type { Album } from "../services/albumService";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../services/authService";
 
 export default function AlbumsPage() {
   const { user, logout } = useAuth();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const navigate = useNavigate();
 
@@ -16,7 +18,7 @@ export default function AlbumsPage() {
   const [editName, setEditName] = useState("");
 
   const openAlbum = (id: number) => {
-    navigate("/upload", { state: { albumId: id } });
+    navigate(`/albums/${id}`);
   };
 
   const loadAlbums = async () => {
@@ -35,22 +37,11 @@ export default function AlbumsPage() {
     const newAlbum = await albumService.createAlbum({
       name,
       user_id: user.id,
+      description: "",
     });
 
     setAlbums([...albums, newAlbum]);
     setName("");
-  };
-
-  const deleteAlbum = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este álbum?")) return;
-
-    await albumService.deleteAlbum(id);
-    setAlbums(albums.filter((p) => p.id !== id));
-  };
-
-  const startEditing = (album: Album) => {
-    setEditingAlbum(album);
-    setEditName(album.name);
   };
 
   const saveEdit = async () => {
@@ -75,19 +66,19 @@ export default function AlbumsPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
 
       <div className="pt-12 pb-8">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <div className="text-left">
-            <h1 className="text-4xl font-bold text-white mb-1">
-              Tus Álbumes
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="text-left w-full sm:w-auto">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">
+              Todos tus álbumes
             </h1>
-            <p className="text-gray-300 text-lg">
-              Gestiona tus álbumes antes de procesar archivos.
+            <p className="text-gray-300 text-base sm:text-lg">
+              Elige un álbum para subir videos y generar karaokes.
             </p>
           </div>
 
           <button
             onClick={logout}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
           >
             Cerrar sesión
           </button>
@@ -96,23 +87,35 @@ export default function AlbumsPage() {
 
       <div className="max-w-7xl mx-auto px-6 pb-12">
 
-        <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-10 border border-gray-700">
-          <h2 className="text-white text-xl font-semibold mb-4">Crear Álbum</h2>
+        <div className="flex flex-col">
+          <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-4 border border-gray-700">
+            <h2 className="text-white text-xl font-semibold mb-4">Crear álbum</h2>
+            <div className="flex space-x-3">
+              <input
+                type="text"
+                placeholder="Nombre del álbum"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
+              />
+              <button
+                onClick={createAlbum}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg"
+              >
+                Crear
+              </button>
+            </div>
+          </div>
 
-          <div className="flex space-x-3">
+          <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-10 border border-gray-700">
+            <h2 className="text-white text-xl font-semibold mb-2">Buscar álbum</h2>
             <input
               type="text"
-              placeholder="Nombre del álbum"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              placeholder="Filtrar por nombre..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600"
             />
-            <button
-              onClick={createAlbum}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 rounded-lg"
-            >
-              Crear
-            </button>
           </div>
         </div>
 
@@ -122,39 +125,71 @@ export default function AlbumsPage() {
           <p className="text-gray-300 text-lg">No tienes álbumes todavía.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {albums.map((p) => (
-              <div
-                key={p.id}
-                className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 transition"
-              >
-                <div onClick={() => openAlbum(p.id)} className="cursor-pointer">
-                  <div className="w-full h-24 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg mb-4 flex items-center justify-center">
-                    <span className="text-white text-lg font-semibold">
+            {albums
+              .filter(a => a.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map((p) => (
+                <div
+                  key={p.id}
+                  className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 transition"
+                >
+                  <div onClick={() => openAlbum(p.id)} className="cursor-pointer group">
+                    {/* Thumbnail Stack Effect */}
+                    <div className="relative w-full aspect-video mb-4">
+                      {/* Layer 2 (Bottom) */}
+                      <div className="absolute top-0 left-0 w-full h-full bg-gray-700 rounded-lg transform translate-x-3 -translate-y-3 opacity-40 border border-gray-600"></div>
+                      {/* Layer 1 (Middle) */}
+                      <div className="absolute top-0 left-0 w-full h-full bg-gray-700 rounded-lg transform translate-x-1.5 -translate-y-1.5 opacity-70 border border-gray-600"></div>
+
+                      {/* Main Layer (Top) */}
+                      <div className="absolute top-0 left-0 w-full h-full bg-gray-900 rounded-lg overflow-hidden border border-gray-600 z-10 transition-transform group-hover:-translate-y-1">
+                        {p.videos && p.videos.length > 0 ? (
+                          <img
+                            src={`${API_BASE_URL}/descargar/thumbnail/${p.videos[p.videos.length - 1].job_id}`}
+                            alt={p.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://via.placeholder.com/320x180?text=No+Thumbnail";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                            <span className="text-white text-4xl font-bold opacity-30 select-none">
+                              {p.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                          {/* Optional: Play icon or similar on hover */}
+                        </div>
+                      </div>
+                    </div>
+
+                    <h3 className="text-white text-xl font-bold truncate mb-1 group-hover:text-blue-400 transition-colors">
                       {p.name}
-                    </span>
+                    </h3>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-400">
+                        {p.videos?.length || 0} {p.videos?.length === 1 ? 'video' : 'videos'}
+                      </p>
+                      <p className="text-gray-500 text-xs">
+                        {new Date(p.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
 
-                  <p className="text-gray-300 text-sm text-center">
-                    Creado: {new Date(p.created_at).toLocaleString()}
-                  </p>
+                  <div className="mt-4">
+                    <button
+                      onClick={() => openAlbum(p.id)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium shadow transition"
+                    >
+                      Abrir
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex gap-2 mt-6">
-                  <button
-                    onClick={() => startEditing(p)}
-                    className="w-1/2 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => deleteAlbum(p.id)}
-                    className="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>
