@@ -2,15 +2,12 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HomePage } from "../components/HomePage";
 import { LoadingScreen } from "../components/LoadingScreen";
-import { ResultsPage } from "../components/ResultsPage";
 import { API_BASE_URL } from "../services/authService";
+import { PlayIcon } from "lucide-react";
 
 const UploadPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  // Estado eliminado: no usado en UI
-  const [originalVideoUrl, setOriginalVideoUrl] = useState<string | null>(null);
-
   const location = useLocation();
   const navigate = useNavigate();
   const { albumId } = location.state || {};
@@ -29,10 +26,6 @@ const UploadPage = () => {
     // Guardar nombre original (sin extensión) para usarlo en la descarga del instrumental
     const originalName = selectedFile.name.split(".").slice(0, -1).join(".");
     sessionStorage.setItem("originalFileName", originalName);
-
-    // Crear URL para vista previa del video original
-    const videoUrl = URL.createObjectURL(selectedFile);
-    setOriginalVideoUrl(videoUrl);
   };
 
   const handleAutoProcess = async (selectedFile: File, language: string) => {
@@ -115,11 +108,17 @@ const UploadPage = () => {
       ) : loading ? (
         <LoadingScreen loading={loading} fileName={file.name} />
       ) : (
-        <ResultsPage
-          originalVideoUrl={originalVideoUrl}
-          jobId={sessionStorage.getItem("currentJobId")}
-          originalFileName={sessionStorage.getItem("originalFileName")}
-        />
+        <>
+          <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center text-white">
+            <h2 className="text-2xl font-bold mb-4">Video procesado exitosamente.</h2>
+            <button
+              className="bg-sky-600 text-white px-4 py-2 rounded-md hover:bg-sky-700 font-bold"
+              onClick={() => navigate("/videos/" + encodeURIComponent(sessionStorage.getItem("currentJobId") || ""))}
+            >
+              Ver video <PlayIcon className="inline" />
+            </button>
+          </div>
+        </>
       )}
     </>
   );

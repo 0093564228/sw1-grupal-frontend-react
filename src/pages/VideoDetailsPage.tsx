@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { ResultsPage } from "../components/ResultsPage";
 
 export default function VideoDetailsPage() {
-    const { videoId } = useParams<{ videoId: string }>();
+    const { jobId } = useParams<{ jobId: string }>();
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -17,18 +17,18 @@ export default function VideoDetailsPage() {
     const [selectedAlbumId, setSelectedAlbumId] = useState<number | "">("");
 
     useEffect(() => {
-        if (videoId) {
-            loadVideo(parseInt(videoId));
+        if (jobId) {
+            loadVideo(jobId);
         }
         if (user?.id) {
             loadAlbums(user.id);
         }
-    }, [videoId, user]);
+    }, [jobId, user]);
 
-    const loadVideo = async (id: number) => {
+    const loadVideo = async (jobId: string) => {
         try {
             setLoading(true);
-            const data = await albumService.getVideo(id);
+            const data = await albumService.getVideo(jobId);
             setVideo(data);
         } catch (error) {
             console.error("Error loading video:", error);
@@ -51,7 +51,7 @@ export default function VideoDetailsPage() {
         if (!video || !selectedAlbumId) return;
 
         try {
-            await albumService.moveVideo(video.id, Number(selectedAlbumId));
+            await albumService.moveVideo(video.job_id, Number(selectedAlbumId));
             alert("Video movido exitosamente!");
             setShowMoveModal(false);
             // Opcional: navegar al nuevo álbum o quedarse aquí
@@ -80,7 +80,7 @@ export default function VideoDetailsPage() {
                 {/* Header Navigation */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                     <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate(`/albums/${video.album_id}`)}
                         className="text-gray-300 hover:text-white flex items-center gap-1"
                     >
                         &larr; Volver al álbum
@@ -95,13 +95,11 @@ export default function VideoDetailsPage() {
                 </div>
 
                 {/* Results Page Component Reuse */}
-                {/* ResultsPage espera props específicas que adaptamos desde nuestro objeto video */}
-                {/* ResultsPage espera props específicas que adaptamos desde nuestro objeto video */}
                 <div className="bg-gray-900 rounded-xl overflow-hidden shadow-2xl border border-gray-700">
                     <ResultsPage
-                        originalVideoUrl={null} // No tenemos URL local, el componente usa job_id para downloads/preview
                         jobId={video.job_id || null}
                         originalFileName={video.name}
+                        albumName={albums.find(a => a.videos?.some(v => v.job_id === video.job_id))?.name}
                     />
                 </div>
 

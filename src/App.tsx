@@ -24,7 +24,7 @@ function App() {
         }
       />
       <Route
-        path="/videos/:videoId"
+        path="/videos/:jobId"
         element={
           <ProtectedRoute>
             <VideoDetailsPage />

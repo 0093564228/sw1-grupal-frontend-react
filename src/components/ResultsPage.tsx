@@ -2,15 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { API_BASE_URL } from '../services/authService';
 
 interface ResultsPageProps {
-  originalVideoUrl: string | null;
   jobId: string | null;
   originalFileName: string | null;
+  albumName?: string | null;
 }
 
 export const ResultsPage: React.FC<ResultsPageProps> = ({
-  originalVideoUrl,
   jobId,
-  originalFileName
+  originalFileName,
+  albumName
 }) => {
   // Estados del reproductor de video
   const [isPlaying, setIsPlaying] = useState(false);
@@ -31,7 +31,6 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   const originalAudioRef = useRef<HTMLAudioElement>(null);
   const vocalsAudioRef = useRef<HTMLAudioElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
-  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   // Funciones del reproductor de video
   const handleVideoPlayPause = () => {
@@ -356,16 +355,18 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
           <div className="mb-8 max-w-2xl mx-auto">
             <div className="bg-white rounded-2xl shadow-lg p-4 lg:p-6">
               {/* Título del video */}
+              <div className="text-sm font-medium">
+                {albumName ? `Álbum: ${albumName}` : ''}
+              </div>
               <h3 className="text-lg font-medium mb-4">
                 {originalFileName ? `${originalFileName} - Karaoke` : 'Video Karaoke'}
               </h3>
-
               {/* Reproductor de video */}
               <div className="bg-black rounded-lg overflow-hidden">
                 <div className="relative fullscreen:bg-teal-500 fullscreen:h-screen">
                   <video
                     ref={videoRef}
-                    src={jobId ? `${API_BASE_URL}/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : originalVideoUrl || undefined}
+                    src={jobId ? `${API_BASE_URL}/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : undefined}
                     className="w-full h-48 sm:h-64 md:h-80 object-cover fullscreen:w-full fullscreen:h-screen"
                     onLoadedMetadata={() => {
                       if (videoRef.current) {

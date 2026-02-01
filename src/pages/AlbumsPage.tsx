@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { albumService } from "../services/albumService";
 import type { Album } from "../services/albumService";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../services/authService";
 
 export default function AlbumsPage() {
   const { user, logout } = useAuth();
@@ -36,22 +37,11 @@ export default function AlbumsPage() {
     const newAlbum = await albumService.createAlbum({
       name,
       user_id: user.id,
+      description: "",
     });
 
     setAlbums([...albums, newAlbum]);
     setName("");
-  };
-
-  const deleteAlbum = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este álbum?")) return;
-
-    await albumService.deleteAlbum(id);
-    setAlbums(albums.filter((p) => p.id !== id));
-  };
-
-  const startEditing = (album: Album) => {
-    setEditingAlbum(album);
-    setEditName(album.name);
   };
 
   const saveEdit = async () => {
@@ -79,10 +69,10 @@ export default function AlbumsPage() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="text-left w-full sm:w-auto">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">
-              Tus álbumes
+              Todos tus álbumes
             </h1>
             <p className="text-gray-300 text-base sm:text-lg">
-              Gestiona tus álbumes antes de procesar archivos.
+              Elige un álbum para subir videos y generar karaokes.
             </p>
           </div>
 
@@ -142,35 +132,60 @@ export default function AlbumsPage() {
                   key={p.id}
                   className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 transition"
                 >
-                  <div onClick={() => openAlbum(p.id)} className="cursor-pointer">
-                    <div className="w-full h-24 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg mb-4 flex items-center justify-center">
-                      <span className="text-white text-lg font-semibold">
-                        {p.name}
-                      </span>
+                  <div onClick={() => openAlbum(p.id)} className="cursor-pointer group">
+                    {/* Thumbnail Stack Effect */}
+                    <div className="relative w-full aspect-video mb-4">
+                      {/* Layer 2 (Bottom) */}
+                      <div className="absolute top-0 left-0 w-full h-full bg-gray-700 rounded-lg transform translate-x-3 -translate-y-3 opacity-40 border border-gray-600"></div>
+                      {/* Layer 1 (Middle) */}
+                      <div className="absolute top-0 left-0 w-full h-full bg-gray-700 rounded-lg transform translate-x-1.5 -translate-y-1.5 opacity-70 border border-gray-600"></div>
+
+                      {/* Main Layer (Top) */}
+                      <div className="absolute top-0 left-0 w-full h-full bg-gray-900 rounded-lg overflow-hidden border border-gray-600 z-10 transition-transform group-hover:-translate-y-1">
+                        {p.videos && p.videos.length > 0 ? (
+                          <img
+                            src={`${API_BASE_URL}/descargar/thumbnail/${p.videos[p.videos.length - 1].job_id}`}
+                            alt={p.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://via.placeholder.com/320x180?text=No+Thumbnail";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                            <span className="text-white text-4xl font-bold opacity-30 select-none">
+                              {p.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                          {/* Optional: Play icon or similar on hover */}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex justify-between">
-                      <p className="text-gray-300 text-sm text-center">
-                        Creado: {new Date(p.created_at).toLocaleString()}
+                    <h3 className="text-white text-xl font-bold truncate mb-1 group-hover:text-blue-400 transition-colors">
+                      {p.name}
+                    </h3>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-gray-400">
+                        {p.videos?.length || 0} {p.videos?.length === 1 ? 'video' : 'videos'}
                       </p>
-                      <p className="text-gray-300 text-sm text-center">
-                        Videos: {p.videos?.length || 0}
+                      <p className="text-gray-500 text-xs">
+                        {new Date(p.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-2 mt-6">
+                  <div className="mt-4">
                     <button
-                      onClick={() => startEditing(p)}
-                      className="w-1/2 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg"
+                      onClick={() => openAlbum(p.id)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium shadow transition"
                     >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => deleteAlbum(p.id)}
-                      className="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg"
-                    >
-                      Eliminar
+                      Abrir
                     </button>
                   </div>
                 </div>

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
 
 interface HomePageProps {
   onFileSelect: (file: File) => void;
@@ -9,7 +8,6 @@ interface HomePageProps {
 export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
   const [dragActive, setDragActive] = useState(false);
   const [language, setLanguage] = useState("auto");
-  const { logout } = useAuth();
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();

@@ -40,23 +40,50 @@ export default function AlbumVideosPage() {
         }
     };
 
-    const handleUpdateVideo = async (id: number, newName: string) => {
+    const handleUpdateVideo = async (job_id: string, newName: string) => {
         try {
-            const updatedVideo = await albumService.updateVideo(id, newName);
-            setVideos(videos.map(v => v.id === id ? updatedVideo : v));
+            const updatedVideo = await albumService.updateVideo(job_id, newName);
+            setVideos(videos.map(v => v.job_id === job_id ? updatedVideo : v));
         } catch (error) {
             console.error("Error updating video:", error);
             alert("Error al actualizar el video");
         }
     };
 
-    const handleDeleteVideo = async (id: number) => {
+    const handleDeleteVideo = async (job_id: string) => {
         try {
-            await albumService.deleteVideo(id);
-            setVideos(videos.filter(v => v.id !== id));
+            await albumService.deleteVideo(job_id);
+            setVideos(videos.filter(v => v.job_id !== job_id));
         } catch (error) {
             console.error("Error deleting video:", error);
             alert("Error al eliminar el video");
+        }
+    };
+
+    const handleEditAlbum = async () => {
+        if (!album) return;
+        const newName = prompt("Nuevo nombre para el álbum:", album.name);
+        if (newName && newName !== album.name) {
+            try {
+                const updated = await albumService.updateAlbum(album.id, { name: newName });
+                setAlbum(updated);
+            } catch (error) {
+                console.error("Error updating album:", error);
+                alert("Error al actualizar el álbum");
+            }
+        }
+    };
+
+    const handleDeleteAlbum = async () => {
+        if (!album) return;
+        if (confirm(`¿Estás seguro de eliminar el álbum "${album.name}" y todos sus videos? Esta acción no se puede deshacer.`)) {
+            try {
+                await albumService.deleteAlbum(album.id);
+                navigate("/");
+            } catch (error) {
+                console.error("Error deleting album:", error);
+                alert("Error al eliminar el álbum");
+            }
         }
     };
 
@@ -73,20 +100,74 @@ export default function AlbumVideosPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 pt-12 pb-12">
             <div className="max-w-7xl mx-auto px-6">
-
+                <button
+                    onClick={goBack}
+                    className="text-gray-300 hover:text-white mb-2 flex items-center gap-1"
+                >
+                    &larr; Volver a todos los álbumes
+                </button>
+                <div className="h-1"></div>
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
-                    <div>
-                        <button
-                            onClick={goBack}
-                            className="text-gray-300 hover:text-white mb-2 flex items-center gap-1"
-                        >
-                            &larr; Volver a Álbumes
-                        </button>
-                        <h1 className="text-3xl sm:text-4xl font-bold text-white break-all">
-                            Álbum {album?.name}
-                        </h1>
+                <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-10 gap-6">
+                    <div className="flex items-start gap-6">
+                        {/* Album Thumbnail with Stack Effect */}
+                        <div className="relative w-28 sm:w-28 aspect-video flex-shrink-0 hidden sm:block">
+                            {/* Layer 2 (Bottom) */}
+                            <div className="absolute top-0 left-0 w-full h-full bg-gray-700 rounded-lg transform translate-x-3 -translate-y-3 opacity-40 border border-gray-600"></div>
+                            {/* Layer 1 (Middle) */}
+                            <div className="absolute top-0 left-0 w-full h-full bg-gray-700 rounded-lg transform translate-x-1.5 -translate-y-1.5 opacity-70 border border-gray-600"></div>
+
+                            {/* Main Layer (Top) */}
+                            <div className="absolute top-0 left-0 w-full h-full bg-gray-900 rounded-lg overflow-hidden border border-gray-600 z-10">
+                                {videos && videos.length > 0 ? (
+                                    <img
+                                        src={`${API_BASE_URL}/descargar/thumbnail/${videos[videos.length - 1].job_id}`}
+                                        alt={album?.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = "https://via.placeholder.com/320x180?text=No+Thumbnail";
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                                        <span className="text-white text-3xl font-bold opacity-30 select-none">
+                                            {album?.name.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-3xl sm:text-4xl font-bold text-white break-all">
+                                    {album?.name}
+                                </h1>
+                                <button
+                                    onClick={handleEditAlbum}
+                                    className="text-gray-400 hover:text-blue-400 transition"
+                                    title="Editar nombre del álbum"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={handleDeleteAlbum}
+                                    className="text-gray-400 hover:text-red-500 transition"
+                                    title="Eliminar álbum"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <p className="text-gray-400 text-sm mt-1">
+                                {videos.length} {videos.length === 1 ? 'video' : 'videos'} • Creado el {album ? new Date(album.created_at).toLocaleDateString() : ''}
+                            </p>
+                        </div>
                     </div>
+
 
                     <button
                         onClick={goToUpload}
@@ -127,17 +208,17 @@ export default function AlbumVideosPage() {
                                 .filter(v => v.name.toLowerCase().includes(searchTerm.toLowerCase()))
                                 .map((video) => (
                                     <div
-                                        key={video.id}
+                                        key={video.job_id}
                                         className="bg-gray-800 rounded-lg overflow-hidden shadow-lg border border-gray-700 hover:border-gray-500 transition group relative"
                                     >
                                         {/* Thumbnail Container - Clickable to navigate */}
                                         <div
                                             className="relative aspect-video bg-gray-900 cursor-pointer"
-                                            onClick={() => navigate(`/videos/${video.id}`)}
+                                            onClick={() => navigate(`/videos/${encodeURIComponent(video.job_id)}`)}
                                         >
                                             {video.job_id ? (
                                                 <img
-                                                    src={`${API_BASE_URL}/descargar/thumbnail/${video.job_id}`}
+                                                    src={`${API_BASE_URL}/descargar/thumbnail/${encodeURIComponent(video.job_id)}`}
                                                     alt={video.name}
                                                     className="w-full h-full object-cover"
                                                     onError={(e) => {
@@ -162,7 +243,7 @@ export default function AlbumVideosPage() {
                                                 <h3
                                                     className="text-white font-semibold text-lg truncate flex-1 mr-2 cursor-pointer hover:text-blue-400"
                                                     title={video.name}
-                                                    onClick={() => navigate(`/videos/${video.id}`)}
+                                                    onClick={() => navigate(`/videos/${encodeURIComponent(video.job_id)}`)}
                                                 >
                                                     {video.name}
                                                 </h3>
@@ -173,7 +254,7 @@ export default function AlbumVideosPage() {
                                                             e.stopPropagation();
                                                             const newName = prompt("Nuevo nombre para el video:", video.name);
                                                             if (newName && newName !== video.name) {
-                                                                handleUpdateVideo(video.id, newName);
+                                                                handleUpdateVideo(video.job_id, newName);
                                                             }
                                                         }}
                                                         className="text-gray-400 hover:text-blue-400 p-1"
@@ -187,7 +268,7 @@ export default function AlbumVideosPage() {
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (window.confirm(`¿Estás seguro de eliminar el video "${video.name}"? Esta acción no se puede deshacer.`)) {
-                                                                handleDeleteVideo(video.id);
+                                                                handleDeleteVideo(video.job_id);
                                                             }
                                                         }}
                                                         className="text-gray-400 hover:text-red-500 p-1"

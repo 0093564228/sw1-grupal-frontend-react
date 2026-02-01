@@ -3,10 +3,11 @@ import { apiClient } from "./authService";
 export interface Video {
     id: number;
     name: string;
-    job_id?: string;
-    duration_in_seconds?: number;
+    job_id: string;
+    duration_in_seconds: number;
     format: string;
     created_at: string;
+    album_id: number;
 }
 
 export interface Album {
@@ -14,7 +15,7 @@ export interface Album {
     name: string;
     description?: string;
     created_at: string;
-    videos?: Video[];
+    videos: Video[];
 }
 
 export const albumService = {
@@ -28,10 +29,11 @@ export const albumService = {
         return res.data;
     },
 
-    async createAlbum(payload: { name: string; user_id: number }): Promise<Album> {
+    async createAlbum(payload: { name: string; user_id: number, description: string }): Promise<Album> {
         const res = await apiClient.post("/albums", payload);
         return res.data;
     },
+
     async updateAlbum(
         id: number,
         payload: { name?: string; description?: string }
@@ -49,26 +51,26 @@ export const albumService = {
         return res.data;
     },
 
-    async getVideo(videoId: number): Promise<Video> {
-        const res = await apiClient.get(`/videos/${videoId}`);
+    async getVideo(jobId: string): Promise<Video> {
+        const res = await apiClient.get(`/videos/${encodeURIComponent(jobId)}`);
         return res.data;
     },
 
-    async moveVideo(videoId: number, targetAlbumId: number): Promise<Video> {
+    async moveVideo(jobId: string, targetAlbumId: number): Promise<Video> {
         const formData = new FormData();
         formData.append("target_album_id", String(targetAlbumId));
-        const res = await apiClient.put(`/videos/${videoId}/album`, formData, {
+        const res = await apiClient.put(`/videos/${encodeURIComponent(jobId)}/album`, formData, {
             headers: { "Content-Type": "multipart/form-data" }
         });
         return res.data;
     },
 
-    async updateVideo(videoId: number, name: string): Promise<Video> {
-        const res = await apiClient.put(`/videos/${videoId}`, { name });
+    async updateVideo(jobId: string, name: string): Promise<Video> {
+        const res = await apiClient.put(`/videos/${encodeURIComponent(jobId)}`, { name });
         return res.data;
     },
 
-    async deleteVideo(videoId: number): Promise<void> {
-        await apiClient.delete(`/videos/${videoId}`);
+    async deleteVideo(jobId: string): Promise<void> {
+        await apiClient.delete(`/videos/${encodeURIComponent(jobId)}`);
     }
 };
