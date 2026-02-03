@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { PlayIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HomePage } from "../components/HomePage";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { API_BASE_URL } from "../services/authService";
-import { PlayIcon } from "lucide-react";
 
 const UploadPage = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -24,15 +24,24 @@ const UploadPage = () => {
     // Limpiar job_id anterior
     sessionStorage.removeItem("currentJobId");
     // Guardar nombre original (sin extensión) para usarlo en la descarga del instrumental
-    const originalName = selectedFile.name.split(".").slice(0, -1).join(".");
+    const originalName = selectedFile.name
+      .split(".")
+      .slice(0, -1)
+      .join(".");
     sessionStorage.setItem("originalFileName", originalName);
   };
 
-  const handleAutoProcess = async (selectedFile: File, language: string) => {
+  const handleAutoProcess = async (
+    selectedFile: File,
+    language: string,
+  ) => {
     setLoading(true);
 
     try {
-      console.log("Procesando video automáticamente:", selectedFile.name);
+      console.log(
+        "Procesando video automáticamente:",
+        selectedFile.name,
+      );
       console.log("Idioma seleccionado:", language);
 
       const formData = new FormData();
@@ -52,7 +61,9 @@ const UploadPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+        throw new Error(
+          `Error ${response.status}: ${response.statusText}`,
+        );
       }
 
       const blob = await response.blob();
@@ -72,7 +83,10 @@ const UploadPage = () => {
       }
 
       // Obtener el nombre original sin extensión y agregar "_karaoke" para la descarga del video karaoke
-      const originalName = selectedFile.name.split(".").slice(0, -1).join(".");
+      const originalName = selectedFile.name
+        .split(".")
+        .slice(0, -1)
+        .join(".");
       const downloadName = `${originalName}_karaoke.mp4`;
 
       const a = document.createElement("a");
@@ -110,10 +124,19 @@ const UploadPage = () => {
       ) : (
         <>
           <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex flex-col items-center justify-center text-white">
-            <h2 className="text-2xl font-bold mb-4">Video procesado exitosamente.</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              Video procesado exitosamente.
+            </h2>
             <button
               className="bg-sky-600 text-white px-4 py-2 rounded-md hover:bg-sky-700 font-bold"
-              onClick={() => navigate("/videos/" + encodeURIComponent(sessionStorage.getItem("currentJobId") || ""))}
+              onClick={() =>
+                navigate(
+                  "/videos/" +
+                    encodeURIComponent(
+                      sessionStorage.getItem("currentJobId") || "",
+                    ),
+                )
+              }
             >
               Ver video <PlayIcon className="inline" />
             </button>

@@ -1,12 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
 import type {
-  User,
   LoginRequest,
   RegisterRequest,
+  User,
 } from "../services/authService";
+import { authService } from "../services/authService";
 
 interface AuthContextType {
   user: User | null;
@@ -18,8 +23,11 @@ interface AuthContextType {
   refreshUserData: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -33,12 +41,14 @@ interface AuthProviderProps {
 }
 
 // Componente interno para usar hooks de React Router
-const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
+const AuthProviderInner: React.FC<AuthProviderProps> = ({
+  children,
+}) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(
-    authService.isAuthenticated()
+    authService.isAuthenticated(),
   );
 
   useEffect(() => {
@@ -50,7 +60,7 @@ const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           const userData = await authService.getCurrentUser();
           setUser(userData);
-        } catch (error) {
+        } catch {
           authService.logout();
           setIsAuthenticated(false);
         }
@@ -63,7 +73,10 @@ const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (credentials: LoginRequest) => {
     const response = await authService.login(credentials);
-    authService.setTokens(response.access_token, response.refresh_token);
+    authService.setTokens(
+      response.access_token,
+      response.refresh_token,
+    );
     setIsAuthenticated(true);
     const userData = await authService.getCurrentUser();
     setUser(userData);
@@ -78,7 +91,7 @@ const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
-    navigate('/login');
+    navigate("/login");
   };
 
   const refreshUserData = async () => {
@@ -98,9 +111,15 @@ const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
     refreshUserData,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({
+  children,
+}) => {
   return <AuthProviderInner>{children}</AuthProviderInner>;
 };

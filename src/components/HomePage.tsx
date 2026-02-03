@@ -5,7 +5,10 @@ interface HomePageProps {
   onAutoProcess: (file: File, language: string) => void;
 }
 
-export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
+export const HomePage = ({
+  onFileSelect,
+  onAutoProcess,
+}: HomePageProps) => {
   const [dragActive, setDragActive] = useState(false);
   const [language, setLanguage] = useState("auto");
 
@@ -38,7 +41,9 @@ export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
   };
 
   const handleAreaClick = () => {
-    const fileInput = document.getElementById("file-input") as HTMLInputElement;
+    const fileInput = document.getElementById(
+      "file-input",
+    ) as HTMLInputElement;
     if (fileInput) {
       fileInput.click();
     }
@@ -64,8 +69,8 @@ export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
               Subir nuevo video
             </h1>
             <p className="text-gray-300 text-lg">
-              Sube un nuevo video para separar la voz, la música de fondo con un solo clic y generar tu
-              karaoke.
+              Sube un nuevo video para separar la voz, la música de
+              fondo con un solo clic y generar tu karaoke.
             </p>
           </div>
         </div>
@@ -93,10 +98,11 @@ export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
 
             {/* Área de carga */}
             <div
-              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${dragActive
-                ? "border-purple-400 bg-purple-900/20"
-                : "border-purple-500"
-                }`}
+              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
+                dragActive
+                  ? "border-purple-400 bg-purple-900/20"
+                  : "border-purple-500"
+              }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -144,11 +150,13 @@ export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
 
             {/* Formatos soportados */}
             <div className="mt-4 text-center">
-              <span className="text-gray-400 text-sm">Compatible con: </span>
+              <span className="text-gray-400 text-sm">
+                Compatible con:{" "}
+              </span>
               <span className="text-white text-sm">
-                .MP3, .MP4, .WAV, .AAC, .M4A, .WMA, .OGG, .FLAC, .AIFF, .M4R,
-                .AMR, .OGA, .MOV, .MKV, .WEBM, .AVI, .M4V, .WMV, .TS, .RMVB,
-                .APE, .OPUS, .MTS
+                .MP3, .MP4, .WAV, .AAC, .M4A, .WMA, .OGG, .FLAC, .AIFF,
+                .M4R, .AMR, .OGA, .MOV, .MKV, .WEBM, .AVI, .M4V, .WMV,
+                .TS, .RMVB, .APE, .OPUS, .MTS
               </span>
             </div>
           </div>
@@ -174,7 +182,9 @@ export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
                         />
                       </svg>
                     </div>
-                    <p className="text-sm font-medium">Audio Original</p>
+                    <p className="text-sm font-medium">
+                      Audio Original
+                    </p>
                   </div>
                 </div>
               </div>
@@ -196,13 +206,17 @@ export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-white font-medium mb-2">Audio Instrumental</h3>
+                  <h3 className="text-white font-medium mb-2">
+                    Audio Instrumental
+                  </h3>
                   <div className="flex space-x-1 mb-2">
                     {[...Array(15)].map((_, i) => (
                       <div
                         key={i}
                         className="w-1 bg-blue-400 rounded-full"
-                        style={{ height: `${Math.random() * 20 + 8}px` }}
+                        style={{
+                          height: `${Math.random() * 20 + 8}px`,
+                        }}
                       />
                     ))}
                   </div>
@@ -224,13 +238,17 @@ export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-white font-medium mb-2">Audio Vocal</h3>
+                  <h3 className="text-white font-medium mb-2">
+                    Audio Vocal
+                  </h3>
                   <div className="flex space-x-1 mb-2">
                     {[...Array(15)].map((_, i) => (
                       <div
                         key={i}
                         className="w-1 bg-emerald-400 rounded-full"
-                        style={{ height: `${Math.random() * 20 + 8}px` }}
+                        style={{
+                          height: `${Math.random() * 20 + 8}px`,
+                        }}
                       />
                     ))}
                   </div>
@@ -240,9 +258,7 @@ export const HomePage = ({ onFileSelect, onAutoProcess }: HomePageProps) => {
             </div>
           </div>
         </div>
-
       </div>
-
     </div>
   );
 };

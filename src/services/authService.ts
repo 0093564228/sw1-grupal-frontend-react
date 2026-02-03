@@ -18,7 +18,7 @@ authAPI.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 authAPI.interceptors.response.use(
@@ -48,7 +48,7 @@ authAPI.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export interface User {
