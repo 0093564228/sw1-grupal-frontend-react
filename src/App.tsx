@@ -1,8 +1,8 @@
-import { Routes, Route } from "react-router-dom";
-import { UploadPage, AlbumVideosPage, VideoDetailsPage } from "./pages";
-import { LoginPage } from "./pages/LoginPage";
+import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AlbumVideosPage, UploadPage, VideoDetailsPage } from "./pages";
 import AlbumsPage from "./pages/AlbumsPage";
+import { LoginPage } from "./pages/LoginPage";
 
 function App() {
   return (

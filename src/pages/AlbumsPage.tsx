@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { albumService } from "../services/albumService";
-import type { Album } from "../services/albumService";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import type { Album } from "../services/albumService";
+import { albumService } from "../services/albumService";
 import { API_BASE_URL } from "../services/authService";
 
 export default function AlbumsPage() {
@@ -21,7 +21,7 @@ export default function AlbumsPage() {
     navigate(`/albums/${id}`);
   };
 
-  const loadAlbums = async () => {
+  const loadAlbums = useCallback(async () => {
     try {
       if (!user?.id) return;
       const data = await albumService.getAlbums(user.id);
@@ -29,7 +29,7 @@ export default function AlbumsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   const createAlbum = async () => {
     if (!name.trim() || !user) return;
@@ -52,7 +52,7 @@ export default function AlbumsPage() {
     });
 
     setAlbums(
-      albums.map((p) => (p.id === editingAlbum.id ? updated : p))
+      albums.map((p) => (p.id === editingAlbum.id ? updated : p)),
     );
 
     setEditingAlbum(null);
@@ -60,11 +60,10 @@ export default function AlbumsPage() {
 
   useEffect(() => {
     loadAlbums();
-  }, [user]);
+  }, [loadAlbums]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-
       <div className="pt-12 pb-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="text-left w-full sm:w-auto">
@@ -86,10 +85,11 @@ export default function AlbumsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-12">
-
         <div className="flex flex-col">
           <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-4 border border-gray-700">
-            <h2 className="text-white text-xl font-semibold mb-4">Crear álbum</h2>
+            <h2 className="text-white text-xl font-semibold mb-4">
+              Crear álbum
+            </h2>
             <div className="flex space-x-3">
               <input
                 type="text"
@@ -108,7 +108,9 @@ export default function AlbumsPage() {
           </div>
 
           <div className="bg-gray-800 rounded-lg p-6 shadow-lg mb-10 border border-gray-700">
-            <h2 className="text-white text-xl font-semibold mb-2">Buscar álbum</h2>
+            <h2 className="text-white text-xl font-semibold mb-2">
+              Buscar álbum
+            </h2>
             <input
               type="text"
               placeholder="Filtrar por nombre..."
@@ -122,17 +124,24 @@ export default function AlbumsPage() {
         {loading ? (
           <p className="text-gray-300">Cargando álbumes...</p>
         ) : albums.length === 0 ? (
-          <p className="text-gray-300 text-lg">No tienes álbumes todavía.</p>
+          <p className="text-gray-300 text-lg">
+            No tienes álbumes todavía.
+          </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {albums
-              .filter(a => a.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .filter((a) =>
+                a.name.toLowerCase().includes(searchTerm.toLowerCase()),
+              )
               .map((p) => (
                 <div
                   key={p.id}
                   className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700 transition"
                 >
-                  <div onClick={() => openAlbum(p.id)} className="cursor-pointer group">
+                  <div
+                    onClick={() => openAlbum(p.id)}
+                    className="cursor-pointer group"
+                  >
                     {/* Thumbnail Stack Effect */}
                     <div className="relative w-full aspect-video mb-4">
                       {/* Layer 2 (Bottom) */}
@@ -148,7 +157,8 @@ export default function AlbumsPage() {
                             alt={p.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = "https://via.placeholder.com/320x180?text=No+Thumbnail";
+                              (e.target as HTMLImageElement).src =
+                                "https://via.placeholder.com/320x180?text=No+Thumbnail";
                             }}
                           />
                         ) : (
@@ -172,7 +182,8 @@ export default function AlbumsPage() {
 
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-gray-400">
-                        {p.videos?.length || 0} {p.videos?.length === 1 ? 'video' : 'videos'}
+                        {p.videos?.length || 0}{" "}
+                        {p.videos?.length === 1 ? "video" : "videos"}
                       </p>
                       <p className="text-gray-500 text-xs">
                         {new Date(p.created_at).toLocaleDateString()}
@@ -195,14 +206,21 @@ export default function AlbumsPage() {
       </div>
 
       <div className="text-center pb-8">
-        <h2 className="text-white text-2xl font-bold mb-2">Elige un álbum para continuar</h2>
+        <h2 className="text-white text-2xl font-bold mb-2">
+          Elige un álbum para continuar
+        </h2>
         <svg
           className="w-6 h-6 text-white mx-auto"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </div>
 
@@ -236,7 +254,6 @@ export default function AlbumsPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

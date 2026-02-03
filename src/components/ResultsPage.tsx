@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { API_BASE_URL } from '../services/authService';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { API_BASE_URL } from "../services/authService";
 
 interface ResultsPageProps {
   jobId: string | null;
@@ -10,7 +10,7 @@ interface ResultsPageProps {
 export const ResultsPage: React.FC<ResultsPageProps> = ({
   jobId,
   originalFileName,
-  albumName
+  albumName,
 }) => {
   // Estados del reproductor de video
   const [isPlaying, setIsPlaying] = useState(false);
@@ -23,7 +23,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   const [audioStates, setAudioStates] = useState({
     original: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 },
     vocals: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 },
-    background: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 }
+    background: { isPlaying: false, currentTime: 0, duration: 0, volume: 1 },
   });
 
   // Referencias
@@ -54,7 +54,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   const handleFullscreen = () => {
     if (videoRef.current) {
       if (!document.fullscreenElement) {
-        videoRef.current.requestFullscreen({ navigationUI: 'hide' });
+        videoRef.current.requestFullscreen({ navigationUI: "hide" });
       } else {
         document.exitFullscreen();
       }
@@ -81,7 +81,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   const formatTime = (timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
   // Función para generar ondas dinámicas basadas en tiempo actual
@@ -90,16 +90,30 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
   // Formas base por pista (se generan una sola vez)
   const baseWavesRef = useRef<Record<string, number[]>>({
-    original: Array.from({ length: BASE_WAVE_COUNT }, () => Math.random() * 100),
+    original: Array.from(
+      { length: BASE_WAVE_COUNT },
+      () => Math.random() * 100,
+    ),
     vocals: Array.from({ length: BASE_WAVE_COUNT }, () => Math.random() * 100),
-    background: Array.from({ length: BASE_WAVE_COUNT }, () => Math.random() * 100)
+    background: Array.from(
+      { length: BASE_WAVE_COUNT },
+      () => Math.random() * 100,
+    ),
   });
 
   const getBaseWaves = (trackId: string): number[] => {
-    return baseWavesRef.current[trackId] || Array.from({ length: BASE_WAVE_COUNT }, () => 50);
+    return (
+      baseWavesRef.current[trackId] ||
+      Array.from({ length: BASE_WAVE_COUNT }, () => 50)
+    );
   };
 
-  const generateDynamicWaves = (baseWaves: number[], isPlaying: boolean, currentTime: number, duration: number) => {
+  const generateDynamicWaves = (
+    baseWaves: number[],
+    isPlaying: boolean,
+    currentTime: number,
+    duration: number,
+  ) => {
     if (!isPlaying || duration === 0) {
       // Mantener forma estática cuando no está reproduciendo
       return baseWaves;
@@ -108,7 +122,8 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
     const progress = currentTime / duration;
     return baseWaves.map((wave, index) => {
       const timeOffset = (index / baseWaves.length) * 2;
-      const dynamicFactor = Math.sin((currentTime + timeOffset) * 0.1) * 0.3 + 0.7;
+      const dynamicFactor =
+        Math.sin((currentTime + timeOffset) * 0.1) * 0.3 + 0.7;
       const progressFactor = Math.sin(progress * Math.PI) * 0.2 + 0.8;
       return wave * dynamicFactor * progressFactor;
     });
@@ -122,13 +137,13 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
     // Reproducir la pista seleccionada
     let audioEl: HTMLAudioElement | null;
     switch (trackId) {
-      case 'original':
+      case "original":
         audioEl = originalAudioRef.current;
         break;
-      case 'vocals':
+      case "vocals":
         audioEl = vocalsAudioRef.current;
         break;
-      case 'background':
+      case "background":
         audioEl = backgroundAudioRef.current;
         break;
       default:
@@ -137,40 +152,43 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
     if (audioEl) {
       audioEl.play();
-      setAudioStates(prev => ({
+      setAudioStates((prev) => ({
         ...prev,
-        [trackId]: { ...prev[trackId], isPlaying: true }
+        [trackId]: { ...prev[trackId], isPlaying: true },
       }));
     }
   };
 
   const handlePause = () => {
     pauseAllAudioTracks();
-    setAudioStates(prev => ({
+    setAudioStates((prev) => ({
       original: { ...prev.original, isPlaying: false },
       vocals: { ...prev.vocals, isPlaying: false },
-      background: { ...prev.background, isPlaying: false }
+      background: { ...prev.background, isPlaying: false },
     }));
   };
 
   const pauseAllAudioTracks = () => {
-    [originalAudioRef, vocalsAudioRef, backgroundAudioRef].forEach(ref => {
+    [originalAudioRef, vocalsAudioRef, backgroundAudioRef].forEach((ref) => {
       if (ref.current) {
         ref.current.pause();
       }
     });
   };
 
-  const handleTrackVolumeChange = (trackId: keyof typeof audioStates, newVolume: number) => {
-    setAudioStates(prev => ({
+  const handleTrackVolumeChange = (
+    trackId: keyof typeof audioStates,
+    newVolume: number,
+  ) => {
+    setAudioStates((prev) => ({
       ...prev,
-      [trackId]: { ...prev[trackId], volume: newVolume }
+      [trackId]: { ...prev[trackId], volume: newVolume },
     }));
 
     let audioEl: HTMLAudioElement | null = null;
-    if (trackId === 'original') audioEl = originalAudioRef.current;
-    if (trackId === 'vocals') audioEl = vocalsAudioRef.current;
-    if (trackId === 'background') audioEl = backgroundAudioRef.current;
+    if (trackId === "original") audioEl = originalAudioRef.current;
+    if (trackId === "vocals") audioEl = vocalsAudioRef.current;
+    if (trackId === "background") audioEl = backgroundAudioRef.current;
 
     if (audioEl) {
       audioEl.volume = newVolume;
@@ -178,12 +196,22 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
   };
 
   // Función para actualizar estado de audio específico
-  const updateAudioState = (trackId: keyof typeof audioStates, updates: Partial<{ isPlaying: boolean, currentTime: number, duration: number }>) => {
-    setAudioStates(prev => ({
-      ...prev,
-      [trackId]: { ...prev[trackId], ...updates }
-    }));
-  };
+  const updateAudioState = useCallback(
+    (
+      trackId: keyof typeof audioStates,
+      updates: Partial<{
+        isPlaying: boolean;
+        currentTime: number;
+        duration: number;
+      }>,
+    ) => {
+      setAudioStates((prev) => ({
+        ...prev,
+        [trackId]: { ...prev[trackId], ...updates },
+      }));
+    },
+    [],
+  );
 
   // useEffect para manejar eventos del video
   useEffect(() => {
@@ -196,18 +224,18 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
     const handlePause = () => setIsPlaying(false);
     const handleEnded = () => setIsPlaying(false);
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('durationchange', handleDurationChange);
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('ended', handleEnded);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("durationchange", handleDurationChange);
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("ended", handleEnded);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('durationchange', handleDurationChange);
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("durationchange", handleDurationChange);
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("ended", handleEnded);
     };
   }, []);
 
@@ -216,78 +244,89 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
     const audio = originalAudioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => updateAudioState('original', { currentTime: audio.currentTime });
-    const handleLoadedMetadata = () => updateAudioState('original', { duration: audio.duration });
-    const handlePlay = () => updateAudioState('original', { isPlaying: true });
-    const handlePause = () => updateAudioState('original', { isPlaying: false });
-    const handleEnded = () => updateAudioState('original', { isPlaying: false });
+    const handleTimeUpdate = () =>
+      updateAudioState("original", { currentTime: audio.currentTime });
+    const handleLoadedMetadata = () =>
+      updateAudioState("original", { duration: audio.duration });
+    const handlePlay = () => updateAudioState("original", { isPlaying: true });
+    const handlePause = () =>
+      updateAudioState("original", { isPlaying: false });
+    const handleEnded = () =>
+      updateAudioState("original", { isPlaying: false });
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("ended", handleEnded);
     };
-  }, []);
+  }, [updateAudioState]);
 
   // useEffect para manejar eventos de audio vocals
   useEffect(() => {
     const audio = vocalsAudioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => updateAudioState('vocals', { currentTime: audio.currentTime });
-    const handleLoadedMetadata = () => updateAudioState('vocals', { duration: audio.duration });
-    const handlePlay = () => updateAudioState('vocals', { isPlaying: true });
-    const handlePause = () => updateAudioState('vocals', { isPlaying: false });
-    const handleEnded = () => updateAudioState('vocals', { isPlaying: false });
+    const handleTimeUpdate = () =>
+      updateAudioState("vocals", { currentTime: audio.currentTime });
+    const handleLoadedMetadata = () =>
+      updateAudioState("vocals", { duration: audio.duration });
+    const handlePlay = () => updateAudioState("vocals", { isPlaying: true });
+    const handlePause = () => updateAudioState("vocals", { isPlaying: false });
+    const handleEnded = () => updateAudioState("vocals", { isPlaying: false });
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("ended", handleEnded);
     };
-  }, []);
+  }, [updateAudioState]);
 
   // useEffect para manejar eventos de audio background
   useEffect(() => {
     const audio = backgroundAudioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => updateAudioState('background', { currentTime: audio.currentTime });
-    const handleLoadedMetadata = () => updateAudioState('background', { duration: audio.duration });
-    const handlePlay = () => updateAudioState('background', { isPlaying: true });
-    const handlePause = () => updateAudioState('background', { isPlaying: false });
-    const handleEnded = () => updateAudioState('background', { isPlaying: false });
+    const handleTimeUpdate = () =>
+      updateAudioState("background", { currentTime: audio.currentTime });
+    const handleLoadedMetadata = () =>
+      updateAudioState("background", { duration: audio.duration });
+    const handlePlay = () =>
+      updateAudioState("background", { isPlaying: true });
+    const handlePause = () =>
+      updateAudioState("background", { isPlaying: false });
+    const handleEnded = () =>
+      updateAudioState("background", { isPlaying: false });
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("ended", handleEnded);
     };
-  }, []);
+  }, [updateAudioState]);
 
   // Funciones de descarga
   const handleDownloadAll = () => {
@@ -322,28 +361,34 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
   // Botones placeholder removidos para evitar funciones sin uso
 
-  const tracks: { id: 'original' | 'vocals' | 'background'; title: string; waveformColor: string; currentTime: string; duration: string }[] = [
+  const tracks: {
+    id: "original" | "vocals" | "background";
+    title: string;
+    waveformColor: string;
+    currentTime: string;
+    duration: string;
+  }[] = [
     {
-      id: 'original',
-      title: 'Audio Original',
-      waveformColor: '#60A5FA', // blue-400
-      currentTime: '00:04',
-      duration: '06:28'
+      id: "original",
+      title: "Audio Original",
+      waveformColor: "#60A5FA", // blue-400
+      currentTime: "00:04",
+      duration: "06:28",
     },
     {
-      id: 'vocals',
-      title: 'Voces',
-      waveformColor: '#34D399', // emerald-400
-      currentTime: '00:04',
-      duration: '06:28'
+      id: "vocals",
+      title: "Voces",
+      waveformColor: "#34D399", // emerald-400
+      currentTime: "00:04",
+      duration: "06:28",
     },
     {
-      id: 'background',
-      title: 'Música de Fondo',
-      waveformColor: '#34D399', // emerald-400
-      currentTime: '00:05',
-      duration: '06:28'
-    }
+      id: "background",
+      title: "Música de Fondo",
+      waveformColor: "#34D399", // emerald-400
+      currentTime: "00:05",
+      duration: "06:28",
+    },
   ];
 
   return (
@@ -356,17 +401,23 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
             <div className="bg-white rounded-2xl shadow-lg p-4 lg:p-6">
               {/* Título del video */}
               <div className="text-sm font-medium">
-                {albumName ? `Álbum: ${albumName}` : ''}
+                {albumName ? `Álbum: ${albumName}` : ""}
               </div>
               <h3 className="text-lg font-medium mb-4">
-                {originalFileName ? `${originalFileName} - Karaoke` : 'Video Karaoke'}
+                {originalFileName
+                  ? `${originalFileName} - Karaoke`
+                  : "Video Karaoke"}
               </h3>
               {/* Reproductor de video */}
               <div className="bg-black rounded-lg overflow-hidden">
                 <div className="relative fullscreen:bg-teal-500 fullscreen:h-screen">
                   <video
                     ref={videoRef}
-                    src={jobId ? `${API_BASE_URL}/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}` : undefined}
+                    src={
+                      jobId
+                        ? `${API_BASE_URL}/descargar/video_karaoke_preview/${encodeURIComponent(jobId)}`
+                        : undefined
+                    }
                     className="w-full h-48 sm:h-64 md:h-80 object-cover fullscreen:w-full fullscreen:h-screen"
                     onLoadedMetadata={() => {
                       if (videoRef.current) {
@@ -383,35 +434,63 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                         className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors flex-shrink-0"
                       >
                         {isPlaying ? (
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          <svg
+                            className="w-4 h-4 sm:w-5 sm:h-5 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         ) : (
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                          <svg
+                            className="w-4 h-4 sm:w-5 sm:h-5 text-white ml-0.5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         )}
                       </button>
 
                       {/* Tiempo actual */}
-                      <span className="text-white text-xs sm:text-sm w-10 text-right">{formatTime(currentTime)}</span>
+                      <span className="text-white text-xs sm:text-sm w-10 text-right">
+                        {formatTime(currentTime)}
+                      </span>
 
                       {/* Barra de progreso */}
-                      <div className="flex-1 h-1 bg-gray-600 rounded-full cursor-pointer" onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const clickX = e.clientX - rect.left;
-                        const percentage = clickX / rect.width;
-                        const newTime = percentage * duration;
-                        handleVideoSeek(newTime);
-                      }}>
+                      <div
+                        className="flex-1 h-1 bg-gray-600 rounded-full cursor-pointer"
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const clickX = e.clientX - rect.left;
+                          const percentage = clickX / rect.width;
+                          const newTime = percentage * duration;
+                          handleVideoSeek(newTime);
+                        }}
+                      >
                         <div
                           className="h-1 bg-white rounded-full transition-all duration-200"
-                          style={{ width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%' }}
+                          style={{
+                            width:
+                              duration > 0
+                                ? `${(currentTime / duration) * 100}%`
+                                : "0%",
+                          }}
                         ></div>
                       </div>
 
                       {/* Duración total */}
-                      <span className="text-white text-xs sm:text-sm w-10">{formatTime(duration)}</span>
+                      <span className="text-white text-xs sm:text-sm w-10">
+                        {formatTime(duration)}
+                      </span>
 
                       {/* Control de volumen */}
                       <div className="flex items-center space-x-2 w-24 sm:w-32 hidden sm:flex">
@@ -420,12 +499,28 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                           className="text-white hover:text-gray-300 transition-colors"
                         >
                           {isMuted || volume === 0 ? (
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM15.53 9.47a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-2.69-2.69a.75.75 0 010 1.06L11.72 9.53a.75.75 0 01-1.06-1.06l1.06-1.06a.75.75 0 011.06 0z" clipRule="evenodd" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM15.53 9.47a.75.75 0 010 1.06l-1.06 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-2.69-2.69a.75.75 0 010 1.06L11.72 9.53a.75.75 0 01-1.06-1.06l1.06-1.06a.75.75 0 011.06 0z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           ) : (
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z" clipRule="evenodd" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           )}
                         </button>
@@ -440,14 +535,23 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                         />
                       </div>
 
-
                       {/* Botón de pantalla completa */}
                       <button
                         onClick={handleFullscreen}
                         className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0"
                       >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        <svg
+                          className="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -460,11 +564,14 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
           {/* Pistas de audio */}
           <div className="space-y-4 max-w-2xl mx-auto">
             <div className="flex items-center justify-center mb-6">
-              <h2 className="text-white text-xl font-semibold">Pistas de Audio</h2>
+              <h2 className="text-white text-xl font-semibold">
+                Pistas de Audio
+              </h2>
             </div>
 
             {tracks.map((track) => {
-              const audioState = audioStates[track.id as keyof typeof audioStates];
+              const audioState =
+                audioStates[track.id as keyof typeof audioStates];
               const isPlaying = audioState.isPlaying;
               const currentTime = audioState.currentTime;
               const duration = audioState.duration;
@@ -472,25 +579,54 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
               // Usar forma base por pista y animarla solo si está reproduciendo
               const baseWaves = getBaseWaves(track.id);
-              const dynamicWaves = generateDynamicWaves(baseWaves, isPlaying, currentTime, duration);
+              const dynamicWaves = generateDynamicWaves(
+                baseWaves,
+                isPlaying,
+                currentTime,
+                duration,
+              );
 
               return (
                 <div
                   key={track.id}
-                  className={`bg-gray-800 rounded-lg p-3 sm:p-4 transition-all duration-200 hover:bg-gray-700 ${isPlaying ? 'ring-2 ring-blue-500 bg-gray-750' : ''
-                    }`}
+                  className={`bg-gray-800 rounded-lg p-3 sm:p-4 transition-all duration-200 hover:bg-gray-700 ${
+                    isPlaying ? "ring-2 ring-blue-500 bg-gray-750" : ""
+                  }`}
                 >
-                  <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => isPlaying ? handlePause() : handlePlay(track.id)}>
-                    <h3 className="text-white font-medium text-base sm:text-lg">{track.title}</h3>
+                  <div
+                    className="flex items-center justify-between mb-3 cursor-pointer"
+                    onClick={() =>
+                      isPlaying ? handlePause() : handlePlay(track.id)
+                    }
+                  >
+                    <h3 className="text-white font-medium text-base sm:text-lg">
+                      {track.title}
+                    </h3>
                     <div className="flex items-center space-x-2 sm:space-x-3">
                       <button className="w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center transition-colors">
                         {isPlaying ? (
-                          <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          <svg
+                            className="w-4 h-4 text-white ml-0.5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         ) : (
-                          <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                          <svg
+                            className="w-4 h-4 text-white ml-0.5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         )}
                       </button>
@@ -502,8 +638,16 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
 
                   {/* Volume Control */}
                   <div className="flex items-center space-x-2 mb-2 px-1">
-                    <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z" clipRule="evenodd" />
+                    <svg
+                      className="w-4 h-4 text-gray-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M9.383 2.007A.75.75 0 0110 2.75v14.5a.75.75 0 01-1.617.493L5.66 14.5H3.25A.75.75 0 012.5 13.75v-7.5a.75.75 0 01.75-.75h2.41l2.723-2.743a.75.75 0 011.009-.003zM16.25 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5a.75.75 0 01.75.75z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                     <input
                       type="range"
@@ -512,22 +656,27 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                       step="0.05"
                       value={volume}
                       onClick={(e) => e.stopPropagation()} // Prevent click from triggering play/pause
-                      onChange={(e) => handleTrackVolumeChange(track.id, parseFloat(e.target.value))}
+                      onChange={(e) =>
+                        handleTrackVolumeChange(
+                          track.id,
+                          parseFloat(e.target.value),
+                        )
+                      }
                       className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
                     />
                   </div>
-
 
                   {/* Waveform visual dinámico */}
                   <div className="flex items-end space-x-0 h-12 pointer-events-none">
                     {dynamicWaves.map((height, index) => (
                       <div
                         key={index}
-                        className={`w-0.5 rounded-full transition-all duration-200 ${isPlaying ? 'opacity-100' : 'opacity-70'
-                          } hover:opacity-100`}
+                        className={`w-0.5 rounded-full transition-all duration-200 ${
+                          isPlaying ? "opacity-100" : "opacity-70"
+                        } hover:opacity-100`}
                         style={{
                           height: `${height}%`,
-                          backgroundColor: track.waveformColor
+                          backgroundColor: track.waveformColor,
                         }}
                       />
                     ))}
@@ -548,8 +697,18 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 onClick={handleDownloadVideoKaraoke}
                 className="w-full bg-rose-600 hover:bg-rose-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 <span>Descargar Video Karaoke</span>
               </button>
@@ -561,8 +720,18 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 onClick={handleDownloadOriginal}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 <span>Descargar Audio</span>
               </button>
@@ -574,8 +743,18 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 onClick={handleDownloadVocals}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 <span>Descargar Audio (Vocal)</span>
               </button>
@@ -587,8 +766,18 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 onClick={handleDownloadInstrumental}
                 className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 <span>Descargar Audio Instrumental</span>
               </button>
@@ -600,8 +789,18 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 onClick={handleDownloadAll}
                 className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2 transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
                 <span>Descargar Todo</span>
               </button>
@@ -613,17 +812,29 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
       {/* Elementos de audio ocultos */}
       <audio
         ref={originalAudioRef}
-        src={jobId ? `${API_BASE_URL}/descargar/audio_original/${encodeURIComponent(jobId)}` : undefined}
+        src={
+          jobId
+            ? `${API_BASE_URL}/descargar/audio_original/${encodeURIComponent(jobId)}`
+            : undefined
+        }
         preload="metadata"
       />
       <audio
         ref={vocalsAudioRef}
-        src={jobId ? `${API_BASE_URL}/descargar/audio_vocals/${encodeURIComponent(jobId)}` : undefined}
+        src={
+          jobId
+            ? `${API_BASE_URL}/descargar/audio_vocals/${encodeURIComponent(jobId)}`
+            : undefined
+        }
         preload="metadata"
       />
       <audio
         ref={backgroundAudioRef}
-        src={jobId ? `${API_BASE_URL}/descargar/audio_instrumental/${encodeURIComponent(jobId)}` : undefined}
+        src={
+          jobId
+            ? `${API_BASE_URL}/descargar/audio_instrumental/${encodeURIComponent(jobId)}`
+            : undefined
+        }
         preload="metadata"
       />
     </div>

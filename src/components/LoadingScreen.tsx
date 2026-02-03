@@ -1,11 +1,14 @@
-import React from 'react';
+import React from "react";
 
 interface LoadingScreenProps {
   loading: boolean;
   fileName?: string | null;
 }
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({ loading, fileName }) => {
+export const LoadingScreen: React.FC<LoadingScreenProps> = ({
+  loading,
+  fileName,
+}) => {
   if (!loading) {
     return null;
   }
@@ -14,15 +17,18 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ loading, fileName 
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
       {/* Header */}
       <div className="text-center pt-12 pb-8">
-        <h1 className="text-4xl font-bold text-white mb-4">Removedor de Voz con IA</h1>
-        <p className="text-gray-300 text-lg">Separa la voz, la música de fondo con un solo clic y genera tu karaoke.</p>
+        <h1 className="text-4xl font-bold text-white mb-4">
+          Removedor de Voz con IA
+        </h1>
+        <p className="text-gray-300 text-lg">
+          Separa la voz, la música de fondo con un solo clic y genera tu
+          karaoke.
+        </p>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-
-
           {/* Panel derecho - Área de carga con estado de procesamiento */}
           <div className="bg-gray-800 rounded-lg p-8">
             {/* Área de carga con estado de procesamiento */}
@@ -33,19 +39,36 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ loading, fileName 
                   <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500"></div>
                 </div>
 
-                <h3 className="text-white text-xl font-medium">Subiendo…</h3>
-                <p className="text-gray-400">Procesando tu video para generar el karaoke</p>
+                <h3 className="text-white text-xl font-medium">
+                  Subiendo…
+                </h3>
+                <p className="text-gray-400">
+                  Procesando tu video para generar el karaoke
+                </p>
 
                 {/* Barra de progreso */}
                 <div className="w-full bg-gray-700 rounded-full h-2.5 mt-6">
-                  <div className="bg-purple-600 h-2.5 rounded-full animate-pulse" style={{ width: '75%' }}></div>
+                  <div
+                    className="bg-purple-600 h-2.5 rounded-full animate-pulse"
+                    style={{ width: "75%" }}
+                  ></div>
                 </div>
 
                 {/* Botón de cancelar */}
                 <div className="flex justify-center mt-4">
                   <button className="text-gray-400 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -59,7 +82,6 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ loading, fileName 
                 <p className="text-white font-medium">{fileName}</p>
               </div>
             )}
-
           </div>
 
           {/* Panel izquierdo - Ejemplos visuales */}
@@ -83,7 +105,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ loading, fileName 
                         />
                       </svg>
                     </div>
-                    <p className="text-sm font-medium">Audio Original</p>
+                    <p className="text-sm font-medium">
+                      Audio Original
+                    </p>
                   </div>
                 </div>
               </div>
@@ -105,13 +129,17 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ loading, fileName 
                       />
                     </svg>
                   </div>
-                  <h3 className="text-white font-medium mb-2">Audio Instrumental</h3>
+                  <h3 className="text-white font-medium mb-2">
+                    Audio Instrumental
+                  </h3>
                   <div className="flex space-x-1 mb-2">
                     {[...Array(15)].map((_, i) => (
                       <div
                         key={i}
                         className="w-1 bg-blue-400 rounded-full"
-                        style={{ height: `${Math.random() * 20 + 8}px` }}
+                        style={{
+                          height: `${Math.random() * 20 + 8}px`,
+                        }}
                       />
                     ))}
                   </div>
@@ -133,13 +161,17 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ loading, fileName 
                       />
                     </svg>
                   </div>
-                  <h3 className="text-white font-medium mb-2">Audio Vocal</h3>
+                  <h3 className="text-white font-medium mb-2">
+                    Audio Vocal
+                  </h3>
                   <div className="flex space-x-1 mb-2">
                     {[...Array(15)].map((_, i) => (
                       <div
                         key={i}
                         className="w-1 bg-emerald-400 rounded-full"
-                        style={{ height: `${Math.random() * 20 + 8}px` }}
+                        style={{
+                          height: `${Math.random() * 20 + 8}px`,
+                        }}
                       />
                     ))}
                   </div>
@@ -148,10 +180,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ loading, fileName 
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
   );
 };
-
